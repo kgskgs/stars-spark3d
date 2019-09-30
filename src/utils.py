@@ -1,39 +1,44 @@
 #!/usr/bin/python3
-from pyspark.context import SparkContext
-from pyspark.sql.session import SparkSession
+
 from pyspark.sql.types import *
-
-from pyspark3d.repartitioning import prePartition
-from pyspark3d.repartitioning import repartitionByCol
 from pyspark3d.visualisation import scatter3d_mpl
-
 import pylab as pl
 import numpy as np
+from math import sqrt
 
 
+from pyspark.sql.functions import row_number, monotonically_increasing_id
+from pyspark.sql import Window
+from pyspark import AccumulatorParam
 
-class StarsUtils():
 
+class SparkUtils():
+    """utils that require a spark session"""
     def __init__(self, spark_session):
-        self.spark = spark_session
+            self.spark = spark_session
 
     def load_cluster_data(self, fname, pth="../data/", header="true"):
-
+        """load a cluster from the dataset
+        https://www.kaggle.com/mariopasquato/star-cluster-simulations 
+        """
         schm = StructType([StructField('x', DoubleType(), True),
-                       StructField('y', DoubleType(), True),
-                       StructField('z', DoubleType(), True),
-                       StructField('vx', DoubleType(), True),
-                       StructField('vy', DoubleType(), True),
-                       StructField('vz', DoubleType(), True),
-                       StructField('m', DoubleType(), True),
-                       StructField('id', IntegerType(), True)])
+                            StructField('y', DoubleType(), True),
+                            StructField('z', DoubleType(), True),
+                            StructField('vx', DoubleType(), True),
+                            StructField('vy', DoubleType(), True),
+                            StructField('vz', DoubleType(), True),
+                            StructField('m', DoubleType(), True),
+                            StructField('id', IntegerType(), True)])
 
         df = self.spark.read.load(pth + fname, 
-                        format="csv", header=header, schema=schm)
+                                    format="csv", header=header, schema=schm)
 
         return df
 
+
+
     def plot_cluster_scater(self, df_clust, title, fout=None):
+        """draw a scatter plot of a cluster"""
         coords = np.transpose(df_clust.select("x", "y", "z").collect())
 
         scatter3d_mpl(coords[0], coords[1], coords[2],label="Data set", **{"facecolors":"blue", "marker": "."})
@@ -43,9 +48,40 @@ class StarsUtils():
             pl.savefig(fnout)
         pl.show()
 
+class NpAccumulatorParam(AccumulatorParam):
+    def zero(self, initialValue):
+        return np.zeros(initialValue.shape)
+
+    def addInPlace(self, v1, v2):
+        v1 += v2
+        return v1
+
+
+def df_add_index(df):
+    """add an index column to a dataframe"""
+    return df.withColumn('index', 
+        row_number().over(Window.orderBy(monotonically_increasing_id()))-1)
+
+def vlen3d(v):
+    """calucalte the length of a 3d vector"""
+    return sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2])
+
+def ptv(p1, p2):
+    """get a vector from start and end ponts"""
+    return p2 - p1
+
+def normv(v, length=None):
+    """normalize a vector"""
+    if length == None:
+        length = vlen3d(v)
+    return v/length
+
+
 
 
 if __name__=="__main__":
+    from pyspark.context import SparkContext
+    from pyspark.sql.session import SparkSession  
 
     sc = SparkContext('local')
     spark = SparkSession(sc)
