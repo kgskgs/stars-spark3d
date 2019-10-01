@@ -9,10 +9,11 @@ from pyspark.sql.types import *
 import utils
 
 def accumulate_gforce(row):
+    #row format - (id, (coordinates, mass))
     index = row[0]
-    #if index%500 == 0: print(index)
     coords, mass = row[1]
     n_rows = len(allLocMass.value)
+    
     tmp_array = np.zeros((n_rows,3))
 
     for other in range(index+1, n_rows):
