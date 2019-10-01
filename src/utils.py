@@ -11,13 +11,14 @@ from pyspark.sql.functions import row_number, monotonically_increasing_id
 from pyspark.sql import Window
 from pyspark import AccumulatorParam
 
+from scipy.constants import G
 
 class SparkUtils():
     """utils that require a spark session"""
     def __init__(self, spark_session):
             self.spark = spark_session
 
-    def load_cluster_data(self, fname, pth="../data/", header="true"):
+    def load_cluster_data(self, fname, pth="../data/", header="true", limit=None):
         """load a cluster from the dataset
         https://www.kaggle.com/mariopasquato/star-cluster-simulations 
         """
@@ -33,8 +34,9 @@ class SparkUtils():
         df = self.spark.read.load(pth + fname, 
                                     format="csv", header=header, schema=schm)
 
+        if limit:
+            return df.limit(limit)
         return df
-
 
 
     def plot_cluster_scater(self, df_clust, title, fout=None):
@@ -79,6 +81,13 @@ def normv(v, length=None):
     return v/length
 
 
+def get_gforce(coords1, coords2, mass1, mass2):
+    """calculate gravitational force between two points"""
+    if all(coords1 == coords2):
+        return np.zeros(3)
+    vec = ptv(coords1, coords2)
+    dist = vlen3d(vec)
+    return normv(vec) * G*mass1*mass2/dist**2
 
 
 if __name__=="__main__":
