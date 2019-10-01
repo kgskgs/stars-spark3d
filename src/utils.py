@@ -57,10 +57,12 @@ class NpAccumulatorParam(AccumulatorParam):
         return v1
 
 
-def df_add_index(df):
+def df_add_index(df, order_col):
     """add an index column to a dataframe"""
+    #df = df.rdd.zipWithIndex()
+    #return df.toDF()
     return df.withColumn('index', 
-        row_number().over(Window.orderBy(monotonically_increasing_id()))-1)
+        row_number().over(Window.orderBy(order_col))-1)
 
 def vlen3d(v):
     """calucalte the length of a 3d vector"""

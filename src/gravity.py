@@ -17,12 +17,14 @@ def get_gforce(coords1, coords2, mass1, mass2):
     return utils.normv(vec) * G*mass1*mass2/dist**2
 
 def accumulate_gforce(row):
-    index, coords, mass = row
+    index = row[0]
+    if index%500 == 0: print(index)
+    coords, mass = row[1]
     n_rows = len(allLocMass.value)
     tmp_array = np.zeros((n_rows,3))
 
     for other in range(index+1, n_rows):
-        otherCoords, otherMass = allLocMass[other]
+        otherCoords, otherMass = allLocMass.value[other]
         gforce_vector = get_gforce(coords, otherCoords, mass, otherMass)
 
         tmp_array[index] += gforce_vector
@@ -36,7 +38,7 @@ spark = SparkSession(sc)
 utl = utils.SparkUtils(spark)
 
 clust = utl.load_cluster_data("c_0000.csv")
-clust_index = utils.df_add_index(clust)
+clust_index = utils.df_add_index(clust, 'id')
 
 accGforce = sc.accumulator(np.zeros((clust.count(), 3)), utils.NpAccumulatorParam())
 
@@ -49,6 +51,6 @@ tmpList = rdd_indLocMass_map.sortByKey().collect()
 
 allLocMass = sc.broadcast([x[1] for x in tmpList])
 
-rdd_indLocMass_map.foreach(accumulate_gforce)
+#rdd_indLocMass_map.foreach(accumulate_gforce)
 
 
