@@ -87,7 +87,7 @@ def get_gforce(coords1, coords2, mass1, mass2):
         return np.zeros(3)
     vec = ptv(coords1, coords2)
     dist = vlen3d(vec)
-    return normv(vec) * G*mass1*mass2/dist**2
+    return normv(vec, dist) * G*mass1*mass2/dist**2
 
 
 if __name__=="__main__":
