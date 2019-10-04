@@ -28,6 +28,6 @@ rdd_gforce_map = rdd_idLocMass_map_cartesian.mapValues(
 	lambda x: utils.get_gforce(x[0][0], x[1][0], x[0][1], x[1][1])
 	)
 
-rdd_gforce = rdd_gforce_map.reduceByKey(np.add)
+rdd_gforce = rdd_gforce_map.reduceByKey(add)
 
 print(rdd_gforce.take(10))
