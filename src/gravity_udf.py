@@ -38,7 +38,7 @@ def get_gravity_split(x1,x2,y1,y2,z1,z2,m1,m2):
         return (0, 0, 0)
     vx, vy, vz = x2 - x1, y2 - y1, z2 - z1
     dist = sqrt(vx*vx + vy*vy + vz*vz)
-    gforce = (G*m1*m2)/(G*dist*dist)
+    gforce = (G*m1*m2)/(dist*dist)
     return ((vx/dist) * gforce, (vy/dist) * gforce, (vz/dist) * gforce)
 
 df_gforce_cartesian = (df_idLocMass_cartesian
