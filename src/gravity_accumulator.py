@@ -33,7 +33,7 @@ def accumulate_gforce(row):
 
     accGforce.add(tmp_array)
 
-sc = SparkContext('local[*]')
+sc = SparkContext.getOrCreate()
 spark = SparkSession(sc)
 
 utl = utils.SparkUtils(spark)
@@ -56,6 +56,7 @@ tmpList = rdd_indLocMass_map.collect()
 
 allLocMass = sc.broadcast([x[1] for x in tmpList])
 
+#this forces evaltion - this method can't be lazy
 rdd_indLocMass_map.foreach(accumulate_gforce)
 
-print(accGforce.value)
+#print(accGforce.value)

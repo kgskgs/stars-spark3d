@@ -17,7 +17,7 @@ parser.add_argument("--limit", help="limit", nargs='?', const=1, type=int)
 args = parser.parse_args()
 """/arguments"""
 
-sc = SparkContext('local[*]')
+sc = SparkContext.getOrCreate()
 spark = SparkSession(sc)
 
 utl = utils.SparkUtils(spark)
@@ -38,4 +38,5 @@ rdd_gforce_map = rdd_idLocMass_map_cartesian.mapValues(
 
 rdd_gforce = rdd_gforce_map.reduceByKey(add)
 
-print(rdd_gforce.take(10))
+#this forces evaluation
+#rdd_gforce.count()

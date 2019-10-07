@@ -19,7 +19,7 @@ parser.add_argument("--limit", help="limit", nargs='?', const=1, type=int)
 args = parser.parse_args()
 """/arguments"""
 
-sc = SparkContext('local[*]')
+sc = SparkContext.getOrCreate()
 spark = SparkSession(sc)
 utl = utils.SparkUtils(spark)
 
@@ -63,4 +63,6 @@ df_gforce_cartesian = (df_idLocMass_cartesian
 
 df_gforce = df_gforce_cartesian.groupBy("id").sum("gx", "gy", "gz")
 
-df_gforce.show()
+
+#this forces evaluation
+#df_gforce.rdd.count()
