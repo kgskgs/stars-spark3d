@@ -13,12 +13,14 @@ from pyspark import AccumulatorParam
 
 from scipy.constants import G
 
+import os
+
 class SparkUtils():
     """utils that require a spark session"""
     def __init__(self, spark_session):
             self.spark = spark_session
 
-    def load_cluster_data(self, fname, pth="../data/", header="true", limit=None):
+    def load_cluster_data(self, fname, pth=None, header="true", limit=None):
         """load a cluster from the dataset
         https://www.kaggle.com/mariopasquato/star-cluster-simulations 
         """
@@ -31,7 +33,12 @@ class SparkUtils():
                             StructField('m', DoubleType(), True),
                             StructField('id', IntegerType(), True)])
 
-        df = self.spark.read.load(pth + fname, 
+        if pth:
+            floc = os.path.join(pth, fname)
+        else: #default data location
+            floc = os.path.join(os.path.dirname(__file__), '..', 'data', fname)
+
+        df = self.spark.read.load(floc, 
                                     format="csv", header=header, schema=schm)
 
         if limit:

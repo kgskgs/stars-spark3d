@@ -8,6 +8,14 @@ from pyspark.sql.types import *
 
 import utils
 
+"""arguments"""
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--limit", help="limit", nargs='?', const=1, type=int)
+args = parser.parse_args()
+"""/arguments"""
+
 def accumulate_gforce(row):
     #row format - (id, (coordinates, mass))
     index = row[0]
@@ -29,7 +37,7 @@ sc = SparkContext('local[*]')
 spark = SparkSession(sc)
 
 utl = utils.SparkUtils(spark)
-clust = utl.load_cluster_data("c_0000.csv", limit=2000) #whole dataset is slow
+clust = utl.load_cluster_data("c_0000.csv", limit=args.limit) #whole dataset is slow
 
 #WARN WindowExec: No Partition Defined for Window operation! 
 #Moving all data to a single partition, 
