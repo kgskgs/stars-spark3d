@@ -36,6 +36,7 @@ df_idLocMass_cartesian = rdd_idLocMass_cartesian.toDF(['id', 'x', 'y', 'z', 'm',
 
 
 schm_g_split = StructType([
+    StructField("gforce", DoubleType(), False),
     StructField("gx", DoubleType(), False),
     StructField("gy", DoubleType(), False),
     StructField("gz", DoubleType(), False)])
@@ -43,26 +44,44 @@ schm_g_split = StructType([
 @udf(schm_g_split)
 def get_gravity_split(x1,x2,y1,y2,z1,z2,m1,m2):
     if x1 == x2 and y1 == y2 and z1 == z2:
-        return (0, 0, 0)
+        return (0, 0, 0, 0)
     vx, vy, vz = x2 - x1, y2 - y1, z2 - z1
     dist = sqrt(vx*vx + vy*vy + vz*vz)
     gforce = (G*m1*m2)/(dist*dist)
-    return ((vx/dist) * gforce, (vy/dist) * gforce, (vz/dist) * gforce)
+    return (gforce, (vx/dist) * gforce, (vy/dist) * gforce, (vz/dist) * gforce)
+
 
 df_gforce_cartesian = (df_idLocMass_cartesian
     .withColumn("gforce", 
         #https://stackoverflow.com/a/51908455/1002899
         f.explode(f.array(
-            get_gravity_split(
-            df_idLocMass_cartesian['x'],df_idLocMass_cartesian['x_other'],df_idLocMass_cartesian['y'],df_idLocMass_cartesian['y_other'],df_idLocMass_cartesian['z'],df_idLocMass_cartesian['z_other'],df_idLocMass_cartesian['m'],df_idLocMass_cartesian['m_other']
+            get_gravity_split(df_idLocMass_cartesian['x'],
+                            df_idLocMass_cartesian['x_other'],
+                            df_idLocMass_cartesian['y'],
+                            df_idLocMass_cartesian['y_other'],
+                            df_idLocMass_cartesian['z'],
+                            df_idLocMass_cartesian['z_other'],
+                            df_idLocMass_cartesian['m'],
+                            df_idLocMass_cartesian['m_other']
             )
         ))
     )
     .select("id", "gforce.*")
     )
 
-df_gforce = df_gforce_cartesian.groupBy("id").sum("gx", "gy", "gz")
 
 
-#this forces evaluation
-#df_gforce.rdd.count()
+df_gforce = df_gforce_cartesian.groupBy("id").sum("gforce", "gx", "gy", "gz")\
+            .withColumnRenamed("sum(gforce)","gforce").withColumnRenamed("sum(gx)","gx").withColumnRenamed("sum(gy)","gy").withColumnRenamed("sum(gz)","gz")
+
+
+"""PLOT"""
+from matplotlib import pyplot as pl
+                                                        
+arr_gfs = np.array(df_gforce.select("gforce").collect())\
+            .transpose()[0] #collect returns a list of lists
+
+#print(arr_gfs.shape, arr_gfs)
+print(np.amin(arr_gfs), np.median(arr_gfs), np.amax(arr_gfs))
+pl.hist(arr_gfs, rwidth=0.8, bins="auto")
+pl.show()

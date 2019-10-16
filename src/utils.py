@@ -104,7 +104,7 @@ if __name__=="__main__":
     sc = SparkContext('local')
     spark = SparkSession(sc)
 
-    utils = StarsUtils(spark)
+    utils = SparkUtils(spark)
 
 
     df = utils.load_cluster_data("c_0000.csv")
