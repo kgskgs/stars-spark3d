@@ -7,9 +7,10 @@ from pyspark.sql.functions import udf
 import pyspark.sql.functions as f
 
 from math import sqrt
-from scipy.constants import G
+#from scipy.constants import G
 
-import utils
+import os
+
 
 """arguments"""
 import argparse
@@ -21,11 +22,35 @@ args = parser.parse_args()
 
 sc = SparkContext.getOrCreate()
 spark = SparkSession(sc)
-utl = utils.SparkUtils(spark)
 
-clust = utl.load_cluster_data("c_0000.csv")
+def load_cluster_data(fname, pth=None, header="true", limit=None):
+    """load a cluster from the dataset
+    https://www.kaggle.com/mariopasquato/star-cluster-simulations 
+    """
+    schm = StructType([StructField('x', DoubleType(), True),
+                        StructField('y', DoubleType(), True),
+                        StructField('z', DoubleType(), True),
+                        StructField('vx', DoubleType(), True),
+                        StructField('vy', DoubleType(), True),
+                        StructField('vz', DoubleType(), True),
+                        StructField('m', DoubleType(), True),
+                        StructField('id', IntegerType(), True)])
 
-#calculate_gravity(data, limit = None):
+    if pth:
+        floc = os.path.join(pth, fname)
+    else: #default data location
+        floc = os.path.join(os.path.dirname(__file__), '..', 'data', fname)
+
+    df = spark.read.load(floc, 
+                                format="csv", header=header, schema=schm)
+
+    if limit:
+        return df.limit(limit)
+    return df
+
+clust = load_cluster_data("c_0000.csv", pth="s3://kgs-s3/input/", limit=args.limit)
+
+
 rdd_idLocMass = clust.select('id', 'x', 'y', 'z', 'm').rdd
 
 allLocMass = rdd_idLocMass.collect()
@@ -35,8 +60,8 @@ rdd_idLocMass_cartesian = rdd_idLocMass.flatMap(
 
 df_idLocMass_cartesian = rdd_idLocMass_cartesian.toDF(['id', 'x', 'y', 'z', 'm', 'x_other', 'y_other', 'z_other', 'm_other'])
 
-if args.limit:
-    df_idLocMass_cartesian = df_idLocMass_cartesian.limit(args.limit*64000)
+#if args.limit:
+#    df_idLocMass_cartesian = df_idLocMass_cartesian.limit(args.limit*64000)
 
 #df_idLocMass_cartesian.describe().show()
 #if args.limit:
@@ -54,6 +79,7 @@ def get_gravity_split(x1,x2,y1,y2,z1,z2,m1,m2):
     """
     calcualte gravity force between two points in 3d space
     """
+    G = 6.67408e-11
     if x1 == x2 and y1 == y2 and z1 == z2:
         return (0, 0, 0, 0)
     vx, vy, vz = x2 - x1, y2 - y1, z2 - z1
@@ -83,16 +109,4 @@ df_gforce = df_gforce_cartesian.groupBy("id").sum("gforce", "gx", "gy", "gz")\
                 .withColumnRenamed("sum(gforce)","gforce").withColumnRenamed("sum(gx)","gx").withColumnRenamed("sum(gy)","gy").withColumnRenamed("sum(gz)","gz")
 
 
-"""PLOT"""
-from matplotlib import pyplot as pl
-
-
-#df_gforce.show()
-
-arr_gfs = np.array(df_gforce.select("gforce").collect())\
-            .transpose()[0] #collect returns a list of lists
-
-#print(arr_gfs.shape, arr_gfs)
-print(np.amin(arr_gfs), np.median(arr_gfs), np.amax(arr_gfs))
-pl.hist(arr_gfs, rwidth=0.8, bins="auto")
-pl.show()
+df_gforce.write.csv("s3://kgs-s3/output/{}".format(sc.applicationId))
