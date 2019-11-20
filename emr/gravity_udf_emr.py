@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import numpy as np
 
 from pyspark.context import SparkContext
@@ -7,7 +8,7 @@ from pyspark.sql.functions import udf
 import pyspark.sql.functions as f
 
 from math import sqrt
-#from scipy.constants import G
+from scipy.constants import G
 
 import os
 
@@ -16,14 +17,16 @@ import os
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--limit", help="limit", nargs='?', const=1, type=int)
+parser.add_argument("--limit", help="number of input rows to read", nargs='?', const=1000, type=int)
+parser.add_argument("--outputDir", help="output path", nargs='?', default="../output/")
+parser.add_argument("--inputDir", help="input path", nargs='?', default="../data/")
 args = parser.parse_args()
 """/arguments"""
 
 sc = SparkContext.getOrCreate()
 spark = SparkSession(sc)
 
-def load_cluster_data(fname, pth=None, header="true", limit=None):
+def load_cluster_data(fname, pth=None, header="true", limit=None, part=None):
     """load a cluster from the dataset
     https://www.kaggle.com/mariopasquato/star-cluster-simulations 
     """
@@ -45,27 +48,24 @@ def load_cluster_data(fname, pth=None, header="true", limit=None):
                                 format="csv", header=header, schema=schm)
 
     if limit:
-        return df.limit(limit)
+        df = df.limit(limit)
+    if part:
+        return df.repartition(part)
     return df
 
-clust = load_cluster_data("c_0000.csv", pth="s3://kgs-s3/input/", limit=args.limit)
 
+clust = load_cluster_data("c_0000.csv", pth=args.inputDir, limit=args.limit, part="id")
 
 rdd_idLocMass = clust.select('id', 'x', 'y', 'z', 'm').rdd
+
 
 allLocMass = rdd_idLocMass.collect()
 rdd_idLocMass_cartesian = rdd_idLocMass.flatMap(
     lambda x: [list(x) + list(y)[1:] for y in allLocMass]
     )
 
+
 df_idLocMass_cartesian = rdd_idLocMass_cartesian.toDF(['id', 'x', 'y', 'z', 'm', 'x_other', 'y_other', 'z_other', 'm_other'])
-
-#if args.limit:
-#    df_idLocMass_cartesian = df_idLocMass_cartesian.limit(args.limit*64000)
-
-#df_idLocMass_cartesian.describe().show()
-#if args.limit:
-#    df_idLocMass_cartesian = df_idLocMass_cartesian.filter(df_idLocMass_cartesian.id <= args.limit)    
 
 
 schm_g_split = StructType([
@@ -79,7 +79,6 @@ def get_gravity_split(x1,x2,y1,y2,z1,z2,m1,m2):
     """
     calcualte gravity force between two points in 3d space
     """
-    G = 6.67408e-11
     if x1 == x2 and y1 == y2 and z1 == z2:
         return (0, 0, 0, 0)
     vx, vy, vz = x2 - x1, y2 - y1, z2 - z1
@@ -105,8 +104,9 @@ df_gforce_cartesian = (df_idLocMass_cartesian
     .select("id", "gforce.*")
     )
 
+
 df_gforce = df_gforce_cartesian.groupBy("id").sum("gforce", "gx", "gy", "gz")\
                 .withColumnRenamed("sum(gforce)","gforce").withColumnRenamed("sum(gx)","gx").withColumnRenamed("sum(gy)","gy").withColumnRenamed("sum(gz)","gz")
 
 
-df_gforce.write.csv("s3://kgs-s3/output/{}".format(sc.applicationId))
+df_gforce.write.csv(os.path.join(args.outputDir, sc.applicationId))
