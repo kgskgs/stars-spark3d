@@ -2,8 +2,8 @@
    {
       "Classification":"spark-env",
       "properties":{
-         "maximizeResourceAllocation":"true"
-      },
+         "maximizeResourceAllocation":"false"
+      },      
       "Configurations":[
          {
             "Classification":"export",
@@ -12,5 +12,39 @@
             }
          }
       ]
+   },   
+   {
+     "Classification": "yarn-site",
+     "Properties": {
+       "yarn.nodemanager.vmem-check-enabled": "false",
+       "yarn.nodemanager.pmem-check-enabled": "false",
+       "yarn.scheduler.maximum-allocation-mb": "14336"
+      }
+   },
+   {
+      "Classification": "spark-defaults",
+      "Properties": {
+         "spark.dynamicAllocation.enabled": "false",
+
+         "spark.executor.cores": "8",
+         "spark.executor.instances": "3",
+         "spark.executor.memory": "11624M",
+         "spark.yarn.executor.memoryOverhead": "1292M",
+         "spark.default.parallelism": "64",
+         "spark.sql.shuffle.partitions": "64",
+
+         "spark.memory.fraction": "0.80",
+         "spark.memory.storageFraction": "0.30",
+
+         "spark.yarn.scheduler.reporterThread.maxFailures": "2",
+         "spark.network.timeout": "800s",
+         "spark.executor.heartbeatInterval": "60s",
+
+         "spark.serializer" : "org.apache.spark.serializer.KryoSerializer",
+
+         "spark.executor.extraJavaOptions": "-XX:+UseG1GC -XX:+UnlockDiagnosticVMOptions -XX:+G1SummarizeConcMark -XX:InitiatingHeapOccupancyPercent=35 -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:OnOutOfMemoryError='kill -9 %p'",
+         "spark.driver.extraJavaOptions": "-XX:+UseG1GC -XX:+UnlockDiagnosticVMOptions -XX:+G1SummarizeConcMark -XX:InitiatingHeapOccupancyPercent=35 -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:OnOutOfMemoryError='kill -9 %p'",      
+      }
    }
 ]
+
