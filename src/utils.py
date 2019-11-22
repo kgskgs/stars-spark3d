@@ -13,7 +13,7 @@ from pyspark import AccumulatorParam
 
 
 
-def load_cluster_data(fname, pth, schema=None, header="true", limit=None, part=None):
+def load_df_csv(fname, pth, schema=None, header="true", limit=None, part=None):
     """read dataframe from csv"""
     spark = SparkSession.builder.getOrCreate()
 

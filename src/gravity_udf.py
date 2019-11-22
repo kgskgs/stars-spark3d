@@ -39,7 +39,7 @@ schm = StructType([StructField('x', DoubleType(), True),
                     StructField('m', DoubleType(), True),
                     StructField('id', IntegerType(), True)])
 
-clust = utils.load_cluster_data("c_0000.csv", pth=args.inputDir, limit=args.limit, schema=schm, part="id")
+clust = utils.load_df_csv("c_0000.csv", pth=args.inputDir, limit=args.limit, schema=schm, part="id")
 
 rdd_idLocMass = clust.select('id', 'x', 'y', 'z', 'm').rdd
 
