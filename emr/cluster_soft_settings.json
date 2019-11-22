@@ -18,6 +18,7 @@
      "Properties": {
        "yarn.nodemanager.vmem-check-enabled": "false",
        "yarn.nodemanager.pmem-check-enabled": "false",
+       "yarn.nodemanager.resource.memory-mb": "14336",
        "yarn.scheduler.maximum-allocation-mb": "14336"
       }
    },

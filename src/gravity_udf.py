@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import numpy as np
 
 from pyspark.context import SparkContext
@@ -9,38 +10,47 @@ import pyspark.sql.functions as f
 from math import sqrt
 from scipy.constants import G
 
+import os
+
+"""custom modules"""
 import utils
+
 
 """arguments"""
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--limit", help="limit", nargs='?', const=1, type=int)
+parser.add_argument("--limit", help="number of input rows to read", nargs='?', const=1000, type=int)
+parser.add_argument("--outputDir", help="output path", nargs='?', default="../output/")
+parser.add_argument("--inputDir", help="input path", nargs='?', default="../data/")
 args = parser.parse_args()
 """/arguments"""
 
 sc = SparkContext.getOrCreate()
 spark = SparkSession(sc)
-utl = utils.SparkUtils(spark)
 
-clust = utl.load_cluster_data("c_0000.csv")
 
-#calculate_gravity(data, limit = None):
+schm = StructType([StructField('x', DoubleType(), True),
+                    StructField('y', DoubleType(), True),
+                    StructField('z', DoubleType(), True),
+                    StructField('vx', DoubleType(), True),
+                    StructField('vy', DoubleType(), True),
+                    StructField('vz', DoubleType(), True),
+                    StructField('m', DoubleType(), True),
+                    StructField('id', IntegerType(), True)])
+
+clust = utils.load_cluster_data("c_0000.csv", pth=args.inputDir, limit=args.limit, schema=schm, part="id")
+
 rdd_idLocMass = clust.select('id', 'x', 'y', 'z', 'm').rdd
+
 
 allLocMass = rdd_idLocMass.collect()
 rdd_idLocMass_cartesian = rdd_idLocMass.flatMap(
     lambda x: [list(x) + list(y)[1:] for y in allLocMass]
     )
 
+
 df_idLocMass_cartesian = rdd_idLocMass_cartesian.toDF(['id', 'x', 'y', 'z', 'm', 'x_other', 'y_other', 'z_other', 'm_other'])
-
-if args.limit:
-    df_idLocMass_cartesian = df_idLocMass_cartesian.limit(args.limit*64000)
-
-#df_idLocMass_cartesian.describe().show()
-#if args.limit:
-#    df_idLocMass_cartesian = df_idLocMass_cartesian.filter(df_idLocMass_cartesian.id <= args.limit)    
 
 
 schm_g_split = StructType([
@@ -79,20 +89,8 @@ df_gforce_cartesian = (df_idLocMass_cartesian
     .select("id", "gforce.*")
     )
 
+
 df_gforce = df_gforce_cartesian.groupBy("id").sum("gforce", "gx", "gy", "gz")\
                 .withColumnRenamed("sum(gforce)","gforce").withColumnRenamed("sum(gx)","gx").withColumnRenamed("sum(gy)","gy").withColumnRenamed("sum(gz)","gz")
 
-
-"""PLOT"""
-from matplotlib import pyplot as pl
-
-
-#df_gforce.show()
-
-arr_gfs = np.array(df_gforce.select("gforce").collect())\
-            .transpose()[0] #collect returns a list of lists
-
-#print(arr_gfs.shape, arr_gfs)
-print(np.amin(arr_gfs), np.median(arr_gfs), np.amax(arr_gfs))
-pl.hist(arr_gfs, rwidth=0.8, bins="auto")
-pl.show()
+df_gforce.write.csv(os.path.join(args.outputDir, utils.clean_str(sc.appName)+"-"+sc.applicationId), header = True)
