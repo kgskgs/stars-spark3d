@@ -8,7 +8,7 @@ from pyspark.sql.functions import udf
 import pyspark.sql.functions as f
 
 from math import sqrt
-from scipy.constants import G
+from scipy.constants import G as scipy_G
 
 import os
 
@@ -23,6 +23,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--limit", help="number of input rows to read", nargs='?', const=1000, type=int)
 parser.add_argument("--outputDir", help="output path", nargs='?', default="../output/")
 parser.add_argument("--inputDir", help="input path", nargs='?', default="../data/")
+parser.add_argument("-G", help="gravitational constant for the simulation", nargs='?', default=scipy_G , type=float)
 args = parser.parse_args()
 """/arguments"""
 
@@ -30,30 +31,22 @@ sc = SparkContext.getOrCreate()
 spark = SparkSession(sc)
 
 
-schm = StructType([StructField('x', DoubleType(), True),
-                    StructField('y', DoubleType(), True),
-                    StructField('z', DoubleType(), True),
-                    StructField('vx', DoubleType(), True),
-                    StructField('vy', DoubleType(), True),
-                    StructField('vz', DoubleType(), True),
-                    StructField('m', DoubleType(), True),
-                    StructField('id', IntegerType(), True)])
+schm = StructType([StructField('x', DoubleType(), False),
+                    StructField('y', DoubleType(), False),
+                    StructField('z', DoubleType(), False),
+                    StructField('vx', DoubleType(), False),
+                    StructField('vy', DoubleType(), False),
+                    StructField('vz', DoubleType(), False),
+                    StructField('m', DoubleType(), False),
+                    StructField('id', IntegerType(), False)])
 
-clust = utils.load_df_csv("c_0000.csv", pth=args.inputDir, limit=args.limit, schema=schm, part="id")
+df_clust = utils.load_df("c_0000.csv", pth=args.inputDir, limit=args.limit, schema=schm, part="id")
 
-rdd_idLocMass = clust.select('id', 'x', 'y', 'z', 'm').rdd
-
-
-allLocMass = rdd_idLocMass.collect()
-rdd_idLocMass_cartesian = rdd_idLocMass.flatMap(
-    lambda x: [list(x) + list(y)[1:] for y in allLocMass]
-    )
-
-
-df_idLocMass_cartesian = rdd_idLocMass_cartesian.toDF(['id', 'x', 'y', 'z', 'm', 'x_other', 'y_other', 'z_other', 'm_other'])
-
+df_clust_cartesian = df_clust.crossJoin(df_clust.selectExpr(*["{0} as {0}_other".format(x) for x in df_clust.columns]))
+df_clust_cartesian = df_clust_cartesian.filter("id != id_other")
 
 schm_g_split = StructType([
+    StructField("dist", DoubleType(), False),
     StructField("gforce", DoubleType(), False),
     StructField("gx", DoubleType(), False),
     StructField("gy", DoubleType(), False),
@@ -64,33 +57,38 @@ def get_gravity_split(x1,x2,y1,y2,z1,z2,m1,m2):
     """
     calcualte gravity force between two points in 3d space
     """
-    if x1 == x2 and y1 == y2 and z1 == z2:
-        return (0, 0, 0, 0)
+    #we've removed duplicate id-s already
+    #if x1 == x2 and y1 == y2 and z1 == z2:
+    #   return (0, 0, 0, 0)
     vx, vy, vz = x2 - x1, y2 - y1, z2 - z1
     dist = sqrt(vx*vx + vy*vy + vz*vz)
-    gforce = (G*m1*m2)/(dist*dist)
-    return (gforce, (vx/dist) * gforce, (vy/dist) * gforce, (vz/dist) * gforce)
+    gforce = (args.G*m1*m2)/(dist*dist)
+    return (dist, gforce, (vx/dist) * gforce, (vy/dist) * gforce, (vz/dist) * gforce)
 
-df_gforce_cartesian = (df_idLocMass_cartesian
+df_gforce_cartesian = (df_clust_cartesian
     .withColumn("gforce", 
         #https://stackoverflow.com/a/51908455/1002899
         f.explode(f.array(
-            get_gravity_split(df_idLocMass_cartesian['x'],
-                            df_idLocMass_cartesian['x_other'],
-                            df_idLocMass_cartesian['y'],
-                            df_idLocMass_cartesian['y_other'],
-                            df_idLocMass_cartesian['z'],
-                            df_idLocMass_cartesian['z_other'],
-                            df_idLocMass_cartesian['m'],
-                            df_idLocMass_cartesian['m_other']
+            get_gravity_split(df_clust_cartesian['x'],
+                            df_clust_cartesian['x_other'],
+                            df_clust_cartesian['y'],
+                            df_clust_cartesian['y_other'],
+                            df_clust_cartesian['z'],
+                            df_clust_cartesian['z_other'],
+                            df_clust_cartesian['m'],
+                            df_clust_cartesian['m_other']
             )
         ))
     )
-    .select("id", "gforce.*")
+    .select("id", "id_other", "gforce.*")
     )
+
+
+#get rid of reciprocal relationships when saving
+utils.save_df(df_gforce_cartesian.filter("id < id_other"), "gforce_cartesian", args.outputDir)
 
 
 df_gforce = df_gforce_cartesian.groupBy("id").sum("gforce", "gx", "gy", "gz")\
                 .withColumnRenamed("sum(gforce)","gforce").withColumnRenamed("sum(gx)","gx").withColumnRenamed("sum(gy)","gy").withColumnRenamed("sum(gz)","gz")
 
-df_gforce.write.csv(os.path.join(args.outputDir, utils.clean_str(sc.appName)+"-"+sc.applicationId), header = True)
+utils.save_df(df_gforce, "gforce_sum", args.outputDir)

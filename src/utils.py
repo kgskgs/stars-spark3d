@@ -6,26 +6,42 @@ from scipy.constants import G
 from matplotlib import pyplot as pl
 import re
 
+from pyspark.context import SparkContext
 from pyspark.sql.session import SparkSession  
 from pyspark.sql.functions import row_number
 from pyspark.sql import Window
 from pyspark import AccumulatorParam
 
+from pyspark3d.visualisation import scatter3d_mpl
 
 
-def load_df_csv(fname, pth, schema=None, header="true", limit=None, part=None):
-    """read dataframe from csv"""
+def load_df(fname, pth, schema=None, header="true", limit=None, part=None, **kwargs):
+    """read dataframe from parquet or csv"""
     spark = SparkSession.builder.getOrCreate()
+
+    if "parquet" in fname:
+        fformat = "parquet" 
+    elif "csv" in fname:
+        fformat = "csv"
+    else:
+        raise ValueError("can't load data, specify file extension [parquet, csv] in the filename")
+
 
     floc = os.path.join(pth, fname)
 
-    df = spark.read.load(floc, format="csv", header=header, schema=schema)
+    df = spark.read.load(floc, format=fformat, header=header, schema=schema, **kwargs)
 
     if limit:
         df = df.limit(limit)
     if part:
         return df.repartition(part)
     return df
+
+def save_df(df, fname, pth, fformat="parquet", compression="gzip", **kwargs):
+    """save a dataframe"""
+    sc = SparkContext.getOrCreate()
+    sloc = os.path.join(pth, "{}-{}-{}".format(fname, clean_str(sc.appName),sc.applicationId))
+    df.write.format(fformat).save(sloc, compression=compression, **kwargs)
 
 
 def plot_cluster_scater(df_clust, title="Plot", fout=None):
@@ -47,6 +63,10 @@ def plot_histogram(df, col, title="Plot", fout=None):
     pl.hist(arr_gfs, rwidth=0.8, bins="auto")
 
     pl.show()
+
+def plot_relation_2d(df, col1, col2, title="Plot", fout=None):
+    """plot a scatter of two columns"""
+    pass
 
 
 class NpAccumulatorParam(AccumulatorParam):
@@ -84,7 +104,7 @@ def normv(v, length=None):
         length = vlen3d(v)
     return v/length
 
-
+""
 def get_gforce(coords1, coords2, mass1, mass2):
     """calculate gravitational force between two points"""
     if all(coords1 == coords2):
