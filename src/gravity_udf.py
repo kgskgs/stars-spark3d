@@ -33,7 +33,7 @@ spark = SparkSession(sc)
 df_clust = utils.load_df("c_0000.csv", pth=args.inputDir, limit=args.limit, schema=schemas.clust_input, part="id")
 
 df_clust_cartesian = df_clust.crossJoin(
-    df_clust.selectExpr(*["{0} as {0}_other".format(x) for x in df_clust.columns])
+    df_clust.selectExpr(*["`{0}` as {0}_other".format(x) for x in df_clust.columns])
     ).filter("id != id_other")
 
 @udf(schemas.dist_gforce)
@@ -73,6 +73,6 @@ utils.save_df(df_gforce_cartesian.filter("id < id_other"), "gforce_cartesian", a
 
 
 df_gforce = df_gforce_cartesian.groupBy("id").sum("gforce", "gx", "gy", "gz")\
-            .selectExpr("'sum(gforce)' as gforce","'sum(gx)' as gx","'sum(gy)' as gy","'sum(gz)' as gz")
+            .selectExpr("id","`sum(gforce)` as gforce","`sum(gx)` as gx","`sum(gy)` as gy","`sum(gz)` as gz")
 
 utils.save_df(df_gforce, "gforce_sum", args.outputDir)
