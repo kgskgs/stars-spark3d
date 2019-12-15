@@ -43,6 +43,8 @@ def save_df(df, fname, pth, fformat="parquet", compression="gzip", **kwargs):
     sloc = os.path.join(pth, "{}-{}-{}".format(fname, clean_str(sc.appName),sc.applicationId))
     df.write.format(fformat).save(sloc, compression=compression, **kwargs)
 
+    return sloc
+
 
 def plot_cluster_scater(df_clust, title="Plot", fout=None):
     """draw a scatter plot of a cluster"""
