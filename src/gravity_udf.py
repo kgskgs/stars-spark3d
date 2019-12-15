@@ -3,7 +3,6 @@ import numpy as np
 
 from pyspark.context import SparkContext
 from pyspark.sql.session import SparkSession  
-from pyspark.sql.types import *
 from pyspark.sql.functions import udf
 import pyspark.sql.functions as f
 
@@ -14,7 +13,7 @@ import os
 
 """custom modules"""
 import utils
-
+import schemas
 
 """arguments"""
 import argparse
@@ -31,28 +30,13 @@ sc = SparkContext.getOrCreate()
 spark = SparkSession(sc)
 
 
-schm = StructType([StructField('x', DoubleType(), False),
-                    StructField('y', DoubleType(), False),
-                    StructField('z', DoubleType(), False),
-                    StructField('vx', DoubleType(), False),
-                    StructField('vy', DoubleType(), False),
-                    StructField('vz', DoubleType(), False),
-                    StructField('m', DoubleType(), False),
-                    StructField('id', IntegerType(), False)])
+df_clust = utils.load_df("c_0000.csv", pth=args.inputDir, limit=args.limit, schema=schemas.clust_input, part="id")
 
-df_clust = utils.load_df("c_0000.csv", pth=args.inputDir, limit=args.limit, schema=schm, part="id")
+df_clust_cartesian = df_clust.crossJoin(
+    df_clust.selectExpr(*["{0} as {0}_other".format(x) for x in df_clust.columns])
+    ).filter("id != id_other")
 
-df_clust_cartesian = df_clust.crossJoin(df_clust.selectExpr(*["{0} as {0}_other".format(x) for x in df_clust.columns]))
-df_clust_cartesian = df_clust_cartesian.filter("id != id_other")
-
-schm_g_split = StructType([
-    StructField("dist", DoubleType(), False),
-    StructField("gforce", DoubleType(), False),
-    StructField("gx", DoubleType(), False),
-    StructField("gy", DoubleType(), False),
-    StructField("gz", DoubleType(), False)])
-
-@udf(schm_g_split)
+@udf(schemas.dist_gforce)
 def get_gravity_split(x1,x2,y1,y2,z1,z2,m1,m2):
     """
     calcualte gravity force between two points in 3d space
@@ -89,6 +73,6 @@ utils.save_df(df_gforce_cartesian.filter("id < id_other"), "gforce_cartesian", a
 
 
 df_gforce = df_gforce_cartesian.groupBy("id").sum("gforce", "gx", "gy", "gz")\
-                .withColumnRenamed("sum(gforce)","gforce").withColumnRenamed("sum(gx)","gx").withColumnRenamed("sum(gy)","gy").withColumnRenamed("sum(gz)","gz")
+            .selectExpr("'sum(gforce)' as gforce","'sum(gx)' as gx","'sum(gy)' as gy","'sum(gz)' as gz")
 
 utils.save_df(df_gforce, "gforce_sum", args.outputDir)
