@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 from scipy.constants import G as scipy_G
 
-import gravity
+from gravity import *
 import utils
 
 
@@ -17,12 +17,12 @@ args = parser.parse_args()
 """/arguments"""
 
 
-df_gforce_cartesian = gravity.calc_gforce_cartesian("c_0000.csv", args.inputDir, args.limit, args.G)
+df_gforce_cartesian = calc_gforce_cartesian("c_0000.csv", args.inputDir, args.limit, args.G)
 
 #get rid of reciprocal relationships when saving
 pth = utils.save_df(df_gforce_cartesian.filter("id < id_other"), 
 	"gforce_cartesian", args.outputDir)
 
-df_gforce = gravity.sum_gforce(df_gforce_cartesian) #"*.parquet", pth
+df_gforce = sum_gforce(df_gforce_cartesian)
 
 utils.save_df(df_gforce, "gforce_sum", args.outputDir)

@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 from pyspark.sql.types import *
+from pyspark.mllib.linalg import VectorUDT
 
 clust_input = StructType([
     StructField('x', DoubleType(), False),
@@ -12,6 +13,7 @@ clust_input = StructType([
     StructField('id', IntegerType(), False)
 ])
 
+"""SPLIT"""
 dist_gforce = StructType([
     StructField("dist", DoubleType(), False),
     StructField("gforce", DoubleType(), False),
@@ -36,4 +38,25 @@ gforce_effective = StructType([
     StructField("gx", DoubleType(), False),
     StructField("gy", DoubleType(), False),
     StructField("gz", DoubleType(), False)
+])
+
+"""VECTORS"""
+v_dist_gforce = StructType([
+    StructField("dist", DoubleType(), False),
+    StructField("gforce", DoubleType(), False),
+    StructField("gv", VectorUDT(), False),
+])
+
+v_dist_gforce_cartesian = StructType([
+    StructField('id', IntegerType(), False),
+    StructField('id_other', IntegerType(), False),
+    StructField("dist", DoubleType(), False),
+    StructField("gforce", DoubleType(), False),
+    StructField("g", VectorUDT(), False),
+])
+
+v_gforce_effective = StructType([
+    StructField('id', IntegerType(), False),
+    StructField("gforce", DoubleType(), False),
+    StructField("gv", VectorUDT(), False)
 ])
