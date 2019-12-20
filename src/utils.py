@@ -26,7 +26,6 @@ def load_df(fname, pth, schema=None, header="true", limit=None, part=None, **kwa
     else:
         raise ValueError("can't load data, specify file extension [parquet, csv] in the filename")
 
-
     floc = os.path.join(pth, fname)
 
     df = spark.read.load(floc, format=fformat, header=header, schema=schema, **kwargs)
@@ -70,7 +69,6 @@ def plot_relation_2d(df, col1, col2, title="Plot", fout=None):
     """plot a scatter of two columns"""
     pass
 
-
 class NpAccumulatorParam(AccumulatorParam):
     """spark acumulator param for a numpy array"""
     def zero(self, initialValue):
@@ -106,7 +104,7 @@ def normv(v, length=None):
         length = vlen3d(v)
     return v/length
 
-""
+
 def get_gforce(coords1, coords2, mass1, mass2):
     """calculate gravitational force between two points"""
     if all(coords1 == coords2):

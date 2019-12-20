@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 from pyspark.sql.types import *
-from pyspark.mllib.linalg import VectorUDT
+from pyspark.ml.linalg import VectorUDT
 
 clust_input = StructType([
     StructField('x', DoubleType(), False),

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 import pyspark.sql.functions as f
-from pyspark.mllib.linalg import Vector, VectorUDT
+from pyspark.ml.linalg import Vectors, VectorUDT
 from pyspark.ml.feature import VectorAssembler
 
 from math import sqrt
@@ -59,8 +59,10 @@ def sum_gforce(in_name, in_path=None, part="id"):
     else:
         df_gforce_cartesian = in_name
 
-    df_gforce = df_gforce_cartesian.groupBy("id").sum("gforce", "gv")\
-            .selectExpr("id","`sum(gforce)` as gforce","`sum(gx)` as gx","`sum(gy)` as gy","`sum(gz)` as gz")
 
-    return df_gforce
+    rdd_gforce = df_gforce_cartesian.rdd.map(lambda x: (x['id'], (x['gforce'], x['gv'])))
+
+    rdd_gforce = rdd_gforce.reduceByKey(lambda x, y: (x[0]+y[0], x[1]+y[1]))
+
+    return rdd_gforce.map(lambda x: (x[0], x[1][0], x[1][1])).toDF(schema=schemas.v_gforce_effective)
 

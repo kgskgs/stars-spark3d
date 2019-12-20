@@ -8,9 +8,21 @@ import utils
 import schemas
 
 
-def calc_gforce_cartesian(in_name, in_path, limit, G, part="id"):
+def calc_f (in_name, in_path=None, limit=None, G=1, part="id"):
     """calculate the distance and gravity force between every two particles in the cluster"""
-    df_clust = utils.load_df(in_name, in_path, limit=limit, schema=schemas.clust_input, part=part)
+    if in_path:
+        df_clust = utils.load_df(in_name, in_path, limit=limit, schema=schemas.clust_input, part=part)
+    else:
+        df_clust = in_name
+
+    
+
+def calc_gforce_cartesian(in_name, in_path=None, limit=None, G=1, part="id"):
+    """calculate the distance and gravity force between every two particles in the cluster"""
+    if in_path:
+        df_clust = utils.load_df(in_name, in_path, limit=limit, schema=schemas.clust_input, part=part)
+    else:
+        df_clust = in_name
 
     df_clust_cartesian = df_clust.crossJoin(
         df_clust.selectExpr(*["`{0}` as {0}_other".format(x) for x in df_clust.columns])
