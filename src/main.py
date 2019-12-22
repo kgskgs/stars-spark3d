@@ -3,6 +3,7 @@ from scipy.constants import G as scipy_G
 
 from gravity import *
 import utils
+import schemas
 
 
 """arguments"""
@@ -17,12 +18,15 @@ args = parser.parse_args()
 """/arguments"""
 
 
-df_gforce_cartesian = calc_gforce_cartesian("c_0000.csv", args.inputDir, args.limit, args.G)
+df_in = utils.load_df("c_0000.csv", args.inputDir, 
+	schema=schemas.clust_input, part="id", limit=args.limit)
+
+df_gforce_cartesian = calc_gforce_cartesian(df_in, args.G)
 
 #get rid of reciprocal relationships when saving
 pth = utils.save_df(df_gforce_cartesian.filter("id < id_other"), 
 	"gforce_cartesian", args.outputDir)
 
-df_gforce = sum_gforce(df_gforce_cartesian)
+df_gforce = utils.df_agg_sum(df_gforce_cartesian, "id", "gforce", "gx", "gy", "gz")
 
 utils.save_df(df_gforce, "gforce_sum", args.outputDir)

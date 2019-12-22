@@ -8,25 +8,15 @@ import utils
 import schemas
 
 
-def calc_f (in_name, in_path=None, limit=None, G=1, part="id"):
+def calc_f (df_clust, G=1):
     """calculate the distance and gravity force between every two particles in the cluster"""
-    if in_path:
-        df_clust = utils.load_df(in_name, in_path, limit=limit, schema=schemas.clust_input, part=part)
-    else:
-        df_clust = in_name
+    pass
 
-    
 
-def calc_gforce_cartesian(in_name, in_path=None, limit=None, G=1, part="id"):
+def calc_gforce_cartesian(df_clust, G=1):
     """calculate the distance and gravity force between every two particles in the cluster"""
-    if in_path:
-        df_clust = utils.load_df(in_name, in_path, limit=limit, schema=schemas.clust_input, part=part)
-    else:
-        df_clust = in_name
 
-    df_clust_cartesian = df_clust.crossJoin(
-        df_clust.selectExpr(*["`{0}` as {0}_other".format(x) for x in df_clust.columns])
-        ).filter("id != id_other")
+    df_clust_cartesian = utils.df_x_cartesian(df_clust, filterCol="id")
 
     @f.udf(schemas.dist_gforce)
     def get_gravity_split(x1,x2,y1,y2,z1,z2,m1,m2):
@@ -60,16 +50,3 @@ def calc_gforce_cartesian(in_name, in_path=None, limit=None, G=1, part="id"):
         )
 
     return df_gforce_cartesian
-
-def sum_gforce(in_name, in_path=None, part="id"):
-    """sum the cartesian data by id to get the effective force acting on one particle"""
-    if in_path:
-        df_gforce_cartesian = utils.load_df(in_name, in_path, schema=schemas.dist_gforce_cartesian, part=part)
-    else:
-        df_gforce_cartesian = in_name
-
-    df_gforce = df_gforce_cartesian.groupBy("id").sum("gforce", "gx", "gy", "gz")\
-            .selectExpr("id","`sum(gforce)` as gforce","`sum(gx)` as gx","`sum(gy)` as gy","`sum(gz)` as gz")
-
-    return df_gforce
-

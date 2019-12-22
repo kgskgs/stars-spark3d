@@ -14,6 +14,7 @@ from pyspark import AccumulatorParam
 
 from pyspark3d.visualisation import scatter3d_mpl
 
+"""spark"""
 
 def load_df(fname, pth, schema=None, header="true", limit=None, part=None, **kwargs):
     """read dataframe from parquet or csv"""
@@ -44,6 +45,35 @@ def save_df(df, fname, pth, fformat="parquet", compression="gzip", **kwargs):
 
     return sloc
 
+def df_agg_sum(df, aggCol, *sumCols):
+    """dataframe - aggregate by column and sum"""
+    df_agg = df.groupBy(aggCol).sum(*sumCols)
+    renameCols = ["`sum({0})` as {0}".format(c) for c in sumCols]
+    return df_agg.selectExpr(aggCol, *renameCols)
+
+def df_x_cartesian(df, filterCol=None):
+    """get the cartesian product of a dataframe with itself"""
+    renameCols = ["`{0}` as {0}_other".format(c) for c in df.columns]
+    df_cart = df.crossJoin(df.selectExpr(renameCols))
+    if filterCol:
+        return df_cart.filter("{0} != {0}_other".format(filterCol))
+    return df_cart
+    
+def df_add_index(df, order_col):
+    """add an index column to a dataframe"""
+    return df.withColumn('index', 
+        row_number().over(Window.orderBy(order_col))-1)
+
+class NpAccumulatorParam(AccumulatorParam):
+    """spark acumulator param for a numpy array"""
+    def zero(self, initialValue):
+        return np.zeros(initialValue.shape)
+
+    def addInPlace(self, v1, v2):
+        v1 += v2
+        return v1
+
+"""plots"""
 
 def plot_cluster_scater(df_clust, title="Plot", fout=None):
     """draw a scatter plot of a cluster"""
@@ -65,30 +95,14 @@ def plot_histogram(df, col, title="Plot", fout=None):
 
     pl.show()
 
-def plot_relation_2d(df, col1, col2, title="Plot", fout=None):
-    """plot a scatter of two columns"""
-    pass
 
-class NpAccumulatorParam(AccumulatorParam):
-    """spark acumulator param for a numpy array"""
-    def zero(self, initialValue):
-        return np.zeros(initialValue.shape)
-
-    def addInPlace(self, v1, v2):
-        v1 += v2
-        return v1
-
-
-def df_add_index(df, order_col):
-    """add an index column to a dataframe"""
-    return df.withColumn('index', 
-        row_number().over(Window.orderBy(order_col))-1)
+"""misc"""
 
 def clean_str(string):
-    """clean a string from everything except word characters, replace spaces with '_'
-    """
+    """clean a string from everything except word characters, replace spaces with '_'"""
     string = re.sub(r"\s", "_", string.strip())
     return re.sub(r"[^\w]", "", string)
+
 
 def vlen3d(v):
     """calucalte the length of a 3d vector"""
@@ -103,7 +117,6 @@ def normv(v, length=None):
     if length == None:
         length = vlen3d(v)
     return v/length
-
 
 def get_gforce(coords1, coords2, mass1, mass2):
     """calculate gravitational force between two points"""
