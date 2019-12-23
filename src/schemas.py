@@ -40,6 +40,29 @@ gforce_effective = StructType([
     StructField("gz", DoubleType(), False)
 ])
 
+
+F = StructType([
+    StructField("Fx", DoubleType(), False),
+    StructField("Fy", DoubleType(), False),
+    StructField("Fz", DoubleType(), False)
+])
+
+F_cartesian = StructType([
+    StructField('id', IntegerType(), False),
+    StructField('id_other', IntegerType(), False),
+    StructField("Fx", DoubleType(), False),
+    StructField("Fy", DoubleType(), False),
+    StructField("Fz", DoubleType(), False)
+])
+
+
+F_effective = StructType([
+    StructField('id', IntegerType(), False),
+    StructField("Fx", DoubleType(), False),
+    StructField("Fy", DoubleType(), False),
+    StructField("Fz", DoubleType(), False)
+])
+
 """VECTORS"""
 v_dist_gforce = StructType([
     StructField("dist", DoubleType(), False),
