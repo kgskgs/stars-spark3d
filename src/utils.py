@@ -54,16 +54,16 @@ def save_df(df, fname, pth, fformat="parquet", compression="gzip", **kwargs):
 def df_agg_sum(df, aggCol, *sumCols):
     """dataframe - aggregate by column and sum"""
     df_agg = df.groupBy(aggCol).sum(*sumCols)
-    renameCols = ["`sum({0})` as {0}".format(c) for c in sumCols]
+    renameCols = [f"`sum({col})` as `{col}`" for col in sumCols]
     return df_agg.selectExpr(aggCol, *renameCols)
 
 
 def df_x_cartesian(df, filterCol=None):
     """get the cartesian product of a dataframe with itself"""
-    renameCols = ["`{0}` as {0}_other".format(c) for c in df.columns]
+    renameCols = [f"`{col}` as `{col}_other`" for col in df.columns]
     df_cart = df.crossJoin(df.selectExpr(renameCols))
     if filterCol:
-        return df_cart.filter("{0} != {0}_other".format(filterCol))
+        return df_cart.filter(f"{filterCol} != {filterCol}_other")
     return df_cart
 
 
@@ -76,9 +76,9 @@ def df_add_index(df, order_col):
 def df_minus(df, df_other, idCol, *minusCols):
     """join two dataframes with the same schema by id,
     and subtract the values in their columns"""
-    renameCols = ["`{0}` as {0}_other".format(c) for c in minusCols]
+    renameCols = [f"`{col}` as `{col}_other`" for col in minusCols]
     df_j = df.join(df_other.selectExpr(idCol, *renameCols), idCol, "inner")
-    subCols = ["{0} - {0}_other as `diff({0})`".format(c) for c in minusCols]
+    subCols = [f"`{col}` - `{col}_other` as `diff({col})`" for col in minusCols]
     return df_j.selectExpr(idCol, *subCols)
 
 

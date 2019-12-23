@@ -13,39 +13,29 @@ def calc_F(df_clust, G=1):
 
     df_clust_cartesian = utils.df_x_cartesian(df_clust, filterCol="id")
 
-    @f.udf(schemas.F_cartesian)
-    def get_F_split(x1, x2, y1, y2, z1, z2, m2):
 
-        Fx = (m2 * (x1 - x2)) / abs((x1 - x2)**3)
-        Fy = (m2 * (y1 - y2)) / abs((y1 - y2)**3)
-        Fz = (m2 * (z1 - z2)) / abs((z1 - z2)**3)
+    df_F_cartesian = df_clust_cartesian.selectExpr("id", "id_other", "m_other",
+                                                   "`x` - `x_other` as `diff(x)`",
+                                                   "`y` - `y_other` as `diff(y)`",
+                                                   "`z` - `z_other` as `diff(z)`"
+                                                   )
+    df_F_cartesian = df_F_cartesian.selectExpr("id", "id_other",
+                                               "`diff(x)` * `m_other` as `num(x)`",
+                                               "`diff(y)` * `m_other` as `num(y)`",
+                                               "`diff(z)` * `m_other` as `num(z)`",
+                                               "abs(`diff(x)` * `diff(x)` * `diff(x)`) as `denom(x)`",
+                                               "abs(`diff(y)` * `diff(y)` * `diff(y)`) as `denom(y)`",
+                                               "abs(`diff(z)` * `diff(z)` * `diff(z)`) as `denom(z)`",
+                                               )
 
-        # def calc(c, c_other):
-        #    diff = c - c_other
-        #    return (m2 * diff) / abs(diff**3)
-
-        # return(calc(x1, x2), calc(y1, y2), calc(z1, z2))
-
-        return (Fx, Fy, Fz)
-
-    df_F_cartesian = (df_clust_cartesian
-                      .withColumn("F", f.explode(f.array(
-                          get_F_split(df_clust_cartesian['x'],
-                                      df_clust_cartesian['x_other'],
-                                      df_clust_cartesian['y'],
-                                      df_clust_cartesian['y_other'],
-                                      df_clust_cartesian['z'],
-                                      df_clust_cartesian['z_other'],
-                                      df_clust_cartesian['m_other']
-                                      )
-                      ))
-                      )
-                      .select("id", "id_other", "F.*")
-                      )
-
-    return df_F_cartesian
+    df_F_cartesian = df_F_cartesian.selectExpr("id", "id_other",
+                                               "`num(x)` / `denom(x)` as `Fx`",
+                                               "`num(y)` / `denom(y)` as `Fy`",
+                                               "`num(z)` / `denom(z)` as `Fz`",
+                                               )
 
     df_F = utils.df_agg_sum(df_F_cartesian, "id", "Fx", "Fy", "Fz")
+    df_F = df_F.selectExpr("id", f"`Fx` * {-G} as Fx", f"`Fy` * {-G} as Fy", f"`Fz` * {-G} as Fz")
 
     return df_F
 
