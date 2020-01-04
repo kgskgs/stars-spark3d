@@ -27,7 +27,8 @@ def load_df(fname, pth, schema=None, header="true", limit=None, part=None, **kwa
         fformat = "csv"
     else:
         raise ValueError(
-            "can't load data, specify file extension [parquet, csv] in the filename")
+            "can't load data, specify file extension"
+            " [parquet, csv] in the filename")
 
     floc = os.path.join(pth, fname)
 
@@ -45,7 +46,8 @@ def save_df(df, fname, pth, fformat="parquet", compression="gzip", **kwargs):
     """save a dataframe"""
     sc = SparkContext.getOrCreate()
     sloc = os.path.join(pth, "{}-{}-{}".format(fname,
-                                               clean_str(sc.appName), sc.applicationId))
+                                               clean_str(sc.appName),
+                                               sc.applicationId))
     df.write.format(fformat).save(sloc, compression=compression, **kwargs)
 
     return sloc
@@ -73,13 +75,19 @@ def df_add_index(df, order_col):
                          row_number().over(Window.orderBy(order_col)) - 1)
 
 
-def df_minus(df, df_other, idCol, *minusCols):
+def df_elementwise(df, df_other, idCol, op, *cols):
     """join two dataframes with the same schema by id,
-    and subtract the values in their columns"""
-    renameCols = [f"`{col}` as `{col}_other`" for col in minusCols]
+    and perform an elementwise operation on the
+    selected columns"""
+
+    opStr = {"+": "sum", "-": "dif", "*": "mul", "/": "div"}
+
+    renameCols = [f"`{col}` as `{col}_other`" for col in cols]
     df_j = df.join(df_other.selectExpr(idCol, *renameCols), idCol, "inner")
-    subCols = [f"`{col}` - `{col}_other` as `diff({col})`" for col in minusCols]
-    return df_j.selectExpr(idCol, *subCols)
+
+    opCols = [f"`{col}` {op} `{col}_other` as `{opStr[op]}({col})`"
+              for col in cols]
+    return df_j.selectExpr(idCol, *opCols)
 
 
 class NpAccumulatorParam(AccumulatorParam):
