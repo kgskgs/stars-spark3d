@@ -101,6 +101,22 @@ class NpAccumulatorParam(AccumulatorParam):
         return v1
 
 
+"""cluster"""
+
+
+def calc_cm(df_clust):
+    """
+    calcuate the center of mass of the cluster
+    in our dataset all the masses are equal, so
+    it is equal to the mean of the coordinates
+    """
+    df_cm = df_clust.selectExpr("mean(`x`) as `x`",
+                                "mean(`y`) as `y`",
+                                "mean(`z`) as `z`")
+
+    return df_cm.collect()[0]
+
+
 """plots"""
 
 

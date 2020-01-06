@@ -2,6 +2,7 @@
 
 import utils
 
+
 def calc_F(df_clust, G=1):
     """calculate the force per unit mass acting on every particle
 
@@ -16,6 +17,23 @@ def calc_F(df_clust, G=1):
     [Aarseth, S. (2003). Gravitational N-Body Simulations: Tools and Algorithms]
     """
 
+    df_F_cartesian = calc_F_cartesian(df_clust)
+
+    df_F = utils.df_agg_sum(df_F_cartesian, "id", "Fx", "Fy", "Fz")
+    df_F = df_F.selectExpr("id",
+                           f"`Fx` * {-G} as Fx",
+                           f"`Fy` * {-G} as Fy",
+                           f"`Fz` * {-G} as Fz")
+
+    return df_F
+
+
+def calc_F_cartesian(df_clust):
+    """
+    The pairwise calculations to be used for calculating F
+    can be used to check which particle(s) contribute the most
+    to the effective force acting on a single one
+    """
     df_clust_cartesian = utils.df_x_cartesian(df_clust, filterCol="id")
 
     df_F_cartesian = df_clust_cartesian.selectExpr("id", "id_other", "m_other",
@@ -37,13 +55,7 @@ def calc_F(df_clust, G=1):
                                                "`num(z)` / `denom(z)` as `Fz`",
                                                )
 
-    df_F = utils.df_agg_sum(df_F_cartesian, "id", "Fx", "Fy", "Fz")
-    df_F = df_F.selectExpr("id",
-                           f"`Fx` * {-G} as Fx",
-                           f"`Fy` * {-G} as Fy",
-                           f"`Fz` * {-G} as Fz")
-
-    return df_F
+    return df_F_cartesian
 
 
 def calc_gforce_cartesian(df_clust, G=1):
