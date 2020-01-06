@@ -51,12 +51,12 @@ def calc_gforce_cartesian(df_clust, G=1):
 
         G * m_1 * m_2
     F = -------------
-           d ^ 2
+            d^2
 
     m - mass
     d - distance between the centers
     G - Gravitational Force Constant
-    
+
     [http://www.astronomy.ohio-state.edu/~pogge/Ast161/Unit4/gravity.html]
     """
 

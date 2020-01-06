@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 from scipy.constants import G as scipy_G
 
-from gravity import *
+from interactions import *
 import utils
 import schemas
 
