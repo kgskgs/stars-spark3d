@@ -4,7 +4,8 @@ import utils
 
 
 def calc_F(df_clust, G=1):
-    """calculate the force per unit mass acting on every particle
+    """
+    calculate the force per unit mass acting on every particle
 
              N    m_j*(r_i - r_j)
     F = -G * Σ    ---------------
@@ -14,7 +15,8 @@ def calc_F(df_clust, G=1):
     m - mass
     G - Gravitational Force Constant
 
-    [Aarseth, S. (2003). Gravitational N-Body Simulations: Tools and Algorithms]
+    [Aarseth, S. (2003). Gravitational N-Body Simulations: Tools and Algorithms
+    eq. (1.1)]
     """
 
     df_F_cartesian = calc_F_cartesian(df_clust)
@@ -58,8 +60,59 @@ def calc_F_cartesian(df_clust):
     return df_F_cartesian
 
 
+def step_v(df_clust, df_F, dt):
+    """
+    calculate v for a single timestep t, dt = t - t_0
+    v_i(t) = F_i*∆t + v_i(t0)
+
+    [Aarseth, S. (2003). Gravitational N-Body Simulations: Tools and Algorithms
+    eq. (1.19)]
+    """
+    df_F = df_F.selectExpr("id",
+                           f"`Fx`*{dt} as `vx`",
+                           f"`Fy`*{dt} as `vy`",
+                           f"`Fz`*{dt} as `vz`"
+                           )
+
+    df_v_t = utils.df_elementwise(df_F, df_clust, "id", "+",
+                                  "vx", "vy", "vz")
+
+    return df_v_t
+
+
+def step_r(df_clust, df_F, dt):
+    """
+    calculate r for a single timestep t, dt = t - t_0
+    r_i(t) = 1/2*F_i*∆t^2 + v_i(t0)*∆t + r_i(t0)
+
+    [Aarseth, S. (2003). Gravitational N-Body Simulations: Tools and Algorithms
+    eq. (1.19)]
+    """
+
+    df_F = df_F.selectExpr("id",
+                           f"`Fx`*{dt}*{dt}/2 as `x`",
+                           f"`Fy`*{dt}*{dt}/2 as `y`",
+                           f"`Fz`*{dt}*{dt}/2 as `z`"
+                           )
+
+    df_v0 = df_clust.selectExpr("id",
+                                f"`vx` * {dt} as `x`",
+                                f"`vy` * {dt} as `y`",
+                                f"`vz` * {dt} as `z`"
+                                )
+
+    df_r_t = utils.df_elementwise(df_clust, df_v0, "id", "+",
+                                  "x", "y", "z")
+
+    df_r_t = utils.df_elementwise(df_r_t, df_F, "id", "+",
+                                  "x", "y", "z")
+
+    return df_r_t
+
+
 def calc_gforce_cartesian(df_clust, G=1):
-    """calculate the distance and gravity force between every two particles in the cluster
+    """
+    calculate the distance and gravity force between every two particles in the cluster
 
         G * m_1 * m_2
     F = -------------

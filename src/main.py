@@ -22,13 +22,16 @@ args = parser.parse_args()
 """/arguments"""
 
 
-df_in = utils.load_df("c_0000.csv", args.inputDir,
+df_t0 = utils.load_df("c_0000.csv", args.inputDir,
                       schema=schemas.clust_input, part="id", limit=args.limit)
 
+df_F = calc_F(df_t0, args.G)
 
-df_F = calc_F(df_in, args.G)
+df_r_t1, df_v_t1 = step_r(df_t0, df_F, 1), step_v(df_t0, df_F, 1)
 
-utils.save_df(df_F, "F", args.outputDir)
+df_t1 = df_r_t1.join(df_v_t1, "id")
+
+utils.save_df(df_t1, "c_0001", args.outputDir)
 
 """
 

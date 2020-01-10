@@ -75,18 +75,23 @@ def df_add_index(df, order_col):
                          row_number().over(Window.orderBy(order_col)) - 1)
 
 
-def df_elementwise(df, df_other, idCol, op, *cols):
+def df_elementwise(df, df_other, idCol, op, *cols, renameOutput=False):
     """join two dataframes with the same schema by id,
     and perform an elementwise operation on the
     selected columns"""
 
     opStr = {"+": "sum", "-": "dif", "*": "mul", "/": "div"}
+    
 
     renameCols = [f"`{col}` as `{col}_other`" for col in cols]
     df_j = df.join(df_other.selectExpr(idCol, *renameCols), idCol, "inner")
 
-    opCols = [f"`{col}` {op} `{col}_other` as `{opStr[op]}({col})`"
-              for col in cols]
+    if renameOutput:
+        opCols = [f"`{col}` {op} `{col}_other` as `{opStr[op]}({col})`"
+                  for col in cols]
+    else:
+        opCols = [f"`{col}` {op} `{col}_other` as `{col}`"
+                  for col in cols]
     return df_j.selectExpr(idCol, *opCols)
 
 

@@ -32,7 +32,7 @@ dist_gforce_cartesian = StructType([
     StructField("gz", DoubleType(), False)
 ])
 
-gforce_effective = StructType([
+gforce_id = StructType([
     StructField('id', IntegerType(), False),
     StructField("gforce", DoubleType(), False),
     StructField("gx", DoubleType(), False),
@@ -56,11 +56,26 @@ F_cartesian = StructType([
 ])
 
 
-F_effective = StructType([
+F_id = StructType([
     StructField('id', IntegerType(), False),
     StructField("Fx", DoubleType(), False),
     StructField("Fy", DoubleType(), False),
     StructField("Fz", DoubleType(), False)
+])
+
+
+r_id = StructType([
+    StructField('id', IntegerType(), False),
+    StructField("x", DoubleType(), False),
+    StructField("y", DoubleType(), False),
+    StructField("z", DoubleType(), False)
+])
+
+v_id = StructType([
+    StructField('id', IntegerType(), False),
+    StructField("vx", DoubleType(), False),
+    StructField("vy", DoubleType(), False),
+    StructField("vz", DoubleType(), False)
 ])
 
 """VECTORS"""
