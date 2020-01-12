@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 import numpy as np
 import os
-from math import sqrt
+from math import sqrt, ceil
 from scipy.constants import G
 from matplotlib import pyplot as pl
 import re
@@ -81,7 +81,6 @@ def df_elementwise(df, df_other, idCol, op, *cols, renameOutput=False):
     selected columns"""
 
     opStr = {"+": "sum", "-": "dif", "*": "mul", "/": "div"}
-    
 
     renameCols = [f"`{col}` as `{col}_other`" for col in cols]
     df_j = df.join(df_other.selectExpr(idCol, *renameCols), idCol, "inner")
@@ -120,6 +119,29 @@ def calc_cm(df_clust):
                                 "mean(`z`) as `z`")
 
     return df_cm.collect()[0]
+
+
+def calc_rh(df_clust, cm):
+    """
+    calculate the half-mass radius of the cluster
+    since all the masses are equal that is the distance
+    from the center to the n/2-th closest star
+    """
+    half_count = ceil(df_clust.count() / 2)
+
+    df_dist = df_clust.selectExpr("id",
+                                  f"{cm[0]} - `x` as dx",
+                                  f"{cm[1]} - `y` as dy",
+                                  f"{cm[2]} - `z` as dz",
+                                  )
+
+    df_dist = df_dist.selectExpr("id",
+                                 "sqrt(`dx` * `dx` + `dy` * `dy` + `dz` * `dz`) as dist_c"
+                                 )
+
+    df_dist = df_dist.withColumn('rown',
+                                 row_number().over(Window.orderBy("dist_c")))
+    return df_dist.filter(f"rown={half_count}").collect()[0]['dist_c']
 
 
 """plots"""
