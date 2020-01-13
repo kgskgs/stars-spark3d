@@ -110,9 +110,30 @@ def step_r(df_clust, df_F, dt):
     return df_r_t
 
 
+def advance_euler(df_clust, dt, ttarget, G=1):
+    """
+    advance step by step (by dt)
+    untill the target time is reached
+    """
+    nsteps = ttarget / dt
+    insteps = int(nsteps)
+    if nsteps != insteps:
+        raise ValueError(
+            f"Number of steps should be an integer, {ttarget}%{dt}!=0")
+
+    for _ in range(insteps):
+        df_F = calc_F(df_clust, G)
+        df_v, df_r = step_v(df_clust, df_F, dt), step_r(df_clust, df_F, dt)
+
+        df_clust = df_r.join(df_v, "id").join(df_clust.select("id", "m"), "id")
+
+    return df_clust
+
+
 def calc_gforce_cartesian(df_clust, G=1):
     """
-    calculate the distance and gravity force between every two particles in the cluster
+    calculate the distance and gravity force between 
+    every two particles in the cluster
 
         G * m_1 * m_2
     F = -------------

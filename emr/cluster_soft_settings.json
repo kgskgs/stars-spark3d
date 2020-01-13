@@ -30,7 +30,7 @@
          "spark.executor.cores": "8",
          "spark.executor.instances": "3",
          "spark.executor.memory": "11624M",
-         "spark.yarn.executor.memoryOverhead": "1292M",
+         "spark.executor.memoryOverhead": "1292M",
          "spark.default.parallelism": "64",
          "spark.sql.shuffle.partitions": "64",
 
@@ -44,7 +44,7 @@
          "spark.serializer" : "org.apache.spark.serializer.KryoSerializer",
 
          "spark.executor.extraJavaOptions": "-XX:+UseG1GC -XX:+UnlockDiagnosticVMOptions -XX:+G1SummarizeConcMark -XX:InitiatingHeapOccupancyPercent=35 -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:OnOutOfMemoryError='kill -9 %p'",
-         "spark.driver.extraJavaOptions": "-XX:+UseG1GC -XX:+UnlockDiagnosticVMOptions -XX:+G1SummarizeConcMark -XX:InitiatingHeapOccupancyPercent=35 -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:OnOutOfMemoryError='kill -9 %p'",      
+         "spark.driver.extraJavaOptions": "-XX:+UseG1GC -XX:+UnlockDiagnosticVMOptions -XX:+G1SummarizeConcMark -XX:InitiatingHeapOccupancyPercent=35 -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:OnOutOfMemoryError='kill -9 %p'"     
       }
    }
 ]

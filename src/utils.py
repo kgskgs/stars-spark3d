@@ -18,7 +18,7 @@ from pyspark3d.visualisation import scatter3d_mpl
 
 
 def load_df(fname, pth, schema=None, header="true", limit=None, part=None, **kwargs):
-    """read dataframe from parquet or csv"""
+    """wrapper - read dataframe from parquet or csv"""
     spark = SparkSession.builder.getOrCreate()
 
     if "parquet" in fname:
@@ -43,7 +43,7 @@ def load_df(fname, pth, schema=None, header="true", limit=None, part=None, **kwa
 
 
 def save_df(df, fname, pth, fformat="parquet", compression="gzip", **kwargs):
-    """save a dataframe"""
+    """wrapper - save a dataframe"""
     sc = SparkContext.getOrCreate()
     sloc = os.path.join(pth, "{}-{}-{}".format(fname,
                                                clean_str(sc.appName),
