@@ -94,6 +94,35 @@ def df_elementwise(df, df_other, idCol, op, *cols, renameOutput=False):
     return df_j.selectExpr(idCol, *opCols)
 
 
+def df_compare(df, df_other, idCol):
+    """comapre two dataframes with the same schema and ids
+    by taking the absolute difference of each row"""
+
+    cols = df.columns[:]
+    cols.remove(idCol)
+
+    df_sub = df_elementwise(df, df_other, idCol, '-', *cols)
+
+    abs_cols = [f"abs(`{col}`) as `{col}`" for col in cols]
+
+    return df_sub.selectExpr(idCol, *abs_cols)
+
+
+def simple_error(df, df_target, idCol):
+    """get the absolute differences between all elements
+    of two dataframes with the same schema, and sum them
+
+    note: since inner join is used
+    elements not peresent in one of the dataframes are ignored
+    """
+
+    df_diff = df_compare(df, df_target, idCol)
+
+    sum_cols = df_diff.drop(idCol).groupBy().sum().collect()[0]
+
+    return sum(sum_cols)
+
+
 class NpAccumulatorParam(AccumulatorParam):
     """spark acumulator param for a numpy array"""
 
