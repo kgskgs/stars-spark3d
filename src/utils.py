@@ -94,6 +94,20 @@ def df_elementwise(df, df_other, idCol, op, *cols, renameOutput=False):
     return df_j.selectExpr(idCol, *opCols)
 
 
+class NpAccumulatorParam(AccumulatorParam):
+    """spark acumulator param for a numpy array"""
+
+    def zero(self, initialValue):
+        return np.zeros(initialValue.shape)
+
+    def addInPlace(self, v1, v2):
+        v1 += v2
+        return v1
+
+
+"""comparison"""
+
+
 def df_compare(df, df_other, idCol):
     """comapre two dataframes with the same schema and ids
     by taking the absolute difference of each row"""
@@ -121,17 +135,6 @@ def simple_error(df, df_target, idCol):
     sum_cols = df_diff.drop(idCol).groupBy().sum().collect()[0]
 
     return sum(sum_cols)
-
-
-class NpAccumulatorParam(AccumulatorParam):
-    """spark acumulator param for a numpy array"""
-
-    def zero(self, initialValue):
-        return np.zeros(initialValue.shape)
-
-    def addInPlace(self, v1, v2):
-        v1 += v2
-        return v1
 
 
 """cluster"""
