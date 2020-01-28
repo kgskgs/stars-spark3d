@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 from scipy.constants import G as scipy_G
+from pyspark.context import SparkContext
 
 from interactions import *
 import utils

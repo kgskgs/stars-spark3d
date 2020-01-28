@@ -122,7 +122,8 @@ def advance_euler(df_clust, dt, ttarget, G=1):
             f"Number of steps should be an integer, {ttarget}%{dt}!=0")
 
     for _ in range(insteps):
-        df_F = calc_F(df_clust, G)
+        df_clust = df_clust.localCheckpoint().repartition(16, "id") #TODO change number of partitions based on cofiguration
+        df_F = calc_F(df_clust, G).localCheckpoint()
         df_v, df_r = step_v(df_clust, df_F, dt), step_r(df_clust, df_F, dt)
 
         df_clust = df_r.join(df_v, "id").join(df_clust.select("id", "m"), "id")
@@ -132,7 +133,7 @@ def advance_euler(df_clust, dt, ttarget, G=1):
 
 def calc_gforce_cartesian(df_clust, G=1):
     """
-    calculate the distance and gravity force between 
+    calculate the distance and gravity force between
     every two particles in the cluster
 
         G * m_1 * m_2
