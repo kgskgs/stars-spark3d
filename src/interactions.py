@@ -47,14 +47,12 @@ def calc_F_cartesian(df_clust):
                                                "`diff(x)` * `m_other` as `num(x)`",
                                                "`diff(y)` * `m_other` as `num(y)`",
                                                "`diff(z)` * `m_other` as `num(z)`",
-                                               "abs(`diff(x)` * `diff(x)` * `diff(x)`) as `denom(x)`",
-                                               "abs(`diff(y)` * `diff(y)` * `diff(y)`) as `denom(y)`",
-                                               "abs(`diff(z)` * `diff(z)` * `diff(z)`) as `denom(z)`",
+                                               "sqrt(`diff(x)` * `diff(x)` + `diff(y)` * `diff(y)` + `diff(z)` * `diff(z)`) as `denom`",
                                                )
     df_F_cartesian = df_F_cartesian.selectExpr("id", "id_other",
-                                               "`num(x)` / `denom(x)` as `Fx`",
-                                               "`num(y)` / `denom(y)` as `Fy`",
-                                               "`num(z)` / `denom(z)` as `Fz`",
+                                               "`num(x)` / pow(`denom`, 3) as `Fx`",
+                                               "`num(y)` / pow(`denom`, 3) as `Fy`",
+                                               "`num(z)` / pow(`denom`, 3) as `Fz`",
                                                )
 
     return df_F_cartesian

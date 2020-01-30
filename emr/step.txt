@@ -1,0 +1,3 @@
+command-runner.jar
+
+spark-submit --deploy-mode cluster --py-files s3://kgs-s3/scripts/utils.py,s3://kgs-s3/scripts/interactions.py,s3://kgs-s3/scripts/schemas.py --name sim100_dt100 s3://kgs-s3/scripts/main.py 100 100 --outputDir s3://kgs-s3/output/ --inputDir s3://kgs-s3/input/ -G 1
