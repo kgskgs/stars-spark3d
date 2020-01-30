@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 import numpy as np
 import os
-from math import sqrt, ceil
+from math import sqrt
 from scipy.constants import G
 from matplotlib import pyplot as pl
 import re
@@ -115,11 +115,11 @@ def df_compare(df, df_other, idCol):
     cols = df.columns[:]
     cols.remove(idCol)
 
-    df_sub = df_elementwise(df, df_other, idCol, '-', *cols)
+    df_diff = df_elementwise(df, df_other, idCol, '-', *cols)
 
-    abs_cols = [f"abs(`{col}`) as `{col}`" for col in cols]
+    absCols = [f"abs(`{col}`) as `{col}`" for col in cols]
 
-    return df_sub.selectExpr(idCol, *abs_cols)
+    return df_diff.selectExpr(idCol, *absCols)
 
 
 def simple_error(df, df_target, idCol):
@@ -130,11 +130,36 @@ def simple_error(df, df_target, idCol):
     elements not peresent in one of the dataframes are ignored
     """
 
-    df_diff = df_compare(df, df_target, idCol)
+    df_adiff = df_compare(df, df_target, idCol)
 
-    sum_cols = df_diff.drop(idCol).groupBy().sum().collect()[0]
+    sumCols = df_adiff.drop(idCol).groupBy().sum().collect()[0]
 
-    return sum(sum_cols)
+    return sum(sumCols)
+
+
+def mse(df, df_target, idCol, rmse=False):
+    """
+    get the mean squared error or root mean squared error
+    between two dataframes with the same schema
+    """
+    cols = df.columns[:]
+    cols.remove(idCol)
+
+    df_diff = df_elementwise(df, df_target, idCol, '-', *cols).drop(idCol)
+    n = df_diff.count()
+
+    powCols = [f"`{col}` * `{col}` as `{col}`" for col in cols]
+    df_mse = df_diff.selectExpr(*powCols)
+    df_mse = df_mse.groupBy().sum()
+
+    if rmse:
+        meanCols = [f"sqrt(`sum({col})` / {n}) as `rmse({col})`"
+                    for col in cols]
+    else:
+        meanCols = [f"`sum({col})` / {n} as `mse({col})`"
+                    for col in cols]
+
+    return df_mse.selectExpr(*meanCols)
 
 
 """plots"""
