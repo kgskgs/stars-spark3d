@@ -60,12 +60,16 @@ def df_agg_sum(df, aggCol, *sumCols):
     return df_agg.selectExpr(aggCol, *renameCols)
 
 
-def df_x_cartesian(df, filterCol=None):
-    """get the cartesian product of a dataframe with itself"""
+def df_x_cartesian(df, ffilter=None):
+    """
+    get the cartesian product of a dataframe with itself
+    
+    :param str ffilter: SQL string to filter the final product by
+    """
     renameCols = [f"`{col}` as `{col}_other`" for col in df.columns]
     df_cart = df.crossJoin(df.selectExpr(renameCols))
-    if filterCol:
-        return df_cart.filter(f"{filterCol} != {filterCol}_other")
+    if ffilter:
+        return df_cart.filter(ffilter)
     return df_cart
 
 

@@ -8,7 +8,7 @@ def calc_F(df_clust, G=1):
     calculate the force per unit mass acting on every particle
 
              N    m_j*(r_i - r_j)
-    F = -G * Σ    ---------------
+    F = -G * Σ   -----------------
             i!=j   |r_i - r_j|^3
 
     r - position
@@ -36,7 +36,7 @@ def calc_F_cartesian(df_clust):
     can be used to check which particle(s) contribute the most
     to the effective force acting on a single one
     """
-    df_clust_cartesian = utils.df_x_cartesian(df_clust, filterCol="id")
+    df_clust_cartesian = utils.df_x_cartesian(df_clust, ffilter="id != id_other")
 
     df_F_cartesian = df_clust_cartesian.selectExpr("id", "id_other", "m_other",
                                                    "`x` - `x_other` as `diff(x)`",
@@ -47,7 +47,8 @@ def calc_F_cartesian(df_clust):
                                                "`diff(x)` * `m_other` as `num(x)`",
                                                "`diff(y)` * `m_other` as `num(y)`",
                                                "`diff(z)` * `m_other` as `num(z)`",
-                                               "sqrt(`diff(x)` * `diff(x)` + `diff(y)` * `diff(y)` + `diff(z)` * `diff(z)`) as `denom`",
+                                               "sqrt(`diff(x)` * `diff(x)` + `diff(y)`"
+                                               "* `diff(y)` + `diff(z)` * `diff(z)`) as `denom`",
                                                )
     df_F_cartesian = df_F_cartesian.selectExpr("id", "id_other",
                                                "`num(x)` / pow(`denom`, 3) as `Fx`",
@@ -145,7 +146,7 @@ def calc_gforce_cartesian(df_clust, G=1):
     [http://www.astronomy.ohio-state.edu/~pogge/Ast161/Unit4/gravity.html]
     """
 
-    df_clust_cartesian = utils.df_x_cartesian(df_clust, filterCol="id")
+    df_clust_cartesian = utils.df_x_cartesian(df_clust, ffilter="id != id_other")
 
     df_gforce_cartesian = df_clust_cartesian.selectExpr("id", "id_other",
                                                         "`x_other` - `x` as  `vx`",
