@@ -11,6 +11,8 @@ def calc_cm(df_clust):
     calcuate the center of mass of the cluster
     in our dataset all the masses are equal, so
     it is equal to the mean of the coordinates
+
+    #TODO generalize so it works with other data
     """
     df_cm = df_clust.selectExpr("mean(`x`) as `x`",
                                 "mean(`y`) as `y`",
@@ -24,6 +26,8 @@ def calc_rh(df_clust, cm):
     calculate the half-mass radius of the cluster
     since all the masses are equal that is the distance
     from the center to the n/2-th closest star
+
+    #TODO generalize so it works with other data
     """
     half_count = ceil(df_clust.count() / 2)
 

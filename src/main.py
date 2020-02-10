@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 from scipy.constants import G as scipy_G
-from pyspark.context import SparkContext
 
 from interactions import *
 import utils
@@ -11,7 +10,11 @@ import schemas
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--limit", help="number of input rows to read",
+parser.add_argument("dt", help="delta t for calculating steps",
+                    type=float)
+parser.add_argument("target", help="target time to reach in the simulation",
+                    type=int)
+parser.add_argument("--limit", help="limit the number of input rows to read",
                     nargs='?', const=1000, type=int)
 parser.add_argument("--outputDir", help="output path",
                     nargs='?', default="../output/")
@@ -19,10 +22,6 @@ parser.add_argument("--inputDir", help="input path",
                     nargs='?', default="../data/")
 parser.add_argument("-G", help="gravitational constant for the simulation",
                     nargs='?', default=scipy_G, type=float)
-parser.add_argument("dt", help="delta t for calculating steps",
-                    type=float)
-parser.add_argument("target", help="target time to reach in the simulation",
-                    type=int)
 args = parser.parse_args()
 """/arguments"""
 
