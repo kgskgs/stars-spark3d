@@ -29,20 +29,6 @@ args = parser.parse_args()
 df_t0 = utils.load_df("c_0000.csv", args.inputDir,
                       schema=schemas.clust_input, part="id", limit=args.limit)
 
-df_t100 = advance_euler(df_t0, args.dt, args.target, args.G)
+df_t100 = advance_euler2(df_t0, args.dt, args.target, args.G)
 
 utils.save_df(df_t100, f"c_{args.target:04d}_dt_{args.dt}", args.outputDir)
-
-"""
-
-df_gforce_cartesian = calc_gforce_cartesian(df_in, args.G)
-
-# get rid of reciprocal relationships when saving
-pth = utils.save_df(df_gforce_cartesian.filter("id < id_other"),
-                    "gforce_cartesian", args.outputDir)
-
-df_gforce = utils.df_agg_sum(
-    df_gforce_cartesian, "id", "gforce", "gx", "gy", "gz")
-
-utils.save_df(df_gforce, "gforce_sum", args.outputDir)
-"""

@@ -7,9 +7,9 @@ def calc_F(df_clust, G=1):
     """
     calculate the force per unit mass acting on every particle
 
-             N    m_j*(r_i - r_j)
+            N     m_j*(r_i - r_j)
     F = -G * Σ   -----------------
-            i!=j   |r_i - r_j|^3
+            i!=j  |r_i - r_j|^3
 
     r - position
     m - mass
@@ -36,7 +36,8 @@ def calc_F_cartesian(df_clust):
     can be used to check which particle(s) contribute the most
     to the effective force acting on a single one
     """
-    df_clust_cartesian = utils.df_x_cartesian(df_clust, ffilter="id != id_other")
+    df_clust_cartesian = utils.df_x_cartesian(
+        df_clust, ffilter="id != id_other")
 
     df_F_cartesian = df_clust_cartesian.selectExpr("id", "id_other", "m_other",
                                                    "`x` - `x_other` as `diff(x)`",
@@ -121,8 +122,45 @@ def advance_euler(df_clust, dt, ttarget, G=1):
             f"Number of steps should be an integer, {ttarget}%{dt}!=0")
 
     for _ in range(insteps):
-        df_clust = df_clust.localCheckpoint().repartition(16, "id") #TODO change number of partitions based on cofiguration
+        # TODO change number of partitions based on configuration
+        df_clust = df_clust.localCheckpoint().repartition(16, "id")
         df_F = calc_F(df_clust, G).localCheckpoint()
+        df_v, df_r = step_v(df_clust, df_F, dt), step_r(df_clust, df_F, dt)
+
+        df_clust = df_r.join(df_v, "id").join(df_clust.select("id", "m"), "id")
+
+    return df_clust
+
+
+def advance_euler2(df_clust, dt, ttarget, G=1):
+    """
+    "improved Euler method"
+    advance step by step (by dt)
+    untill the target time is reached
+    """
+    nsteps = ttarget / dt
+    insteps = int(nsteps)
+    if nsteps != insteps:
+        raise ValueError(
+            f"Number of steps should be an integer, {ttarget}%{dt}!=0")
+
+    df_F = calc_F(df_clust, G).localCheckpoint()
+    for _ in range(insteps):
+        # TODO change number of partitions based on configuration
+        df_clust = df_clust.localCheckpoint().repartition(4, "id")
+
+        df_r_provisional = step_r(df_clust, df_F, dt).join(
+            df_clust.select("id", "m"), "id")
+
+        df_F_prov = calc_F(df_r_provisional, G).localCheckpoint()
+
+        df_F = (utils.df_elementwise(
+            df_F, df_F_prov, "id", "+", "Fx", "Fy", "Fz")
+            .selectExpr("id",
+                        "`Fx` / 2 as `Fx`",
+                        "`Fy` / 2 as `Fy`",
+                        "`Fz` / 2 as `Fz`"))
+        df_F.localCheckpoint()
         df_v, df_r = step_v(df_clust, df_F, dt), step_r(df_clust, df_F, dt)
 
         df_clust = df_r.join(df_v, "id").join(df_clust.select("id", "m"), "id")
@@ -146,7 +184,8 @@ def calc_gforce_cartesian(df_clust, G=1):
     [http://www.astronomy.ohio-state.edu/~pogge/Ast161/Unit4/gravity.html]
     """
 
-    df_clust_cartesian = utils.df_x_cartesian(df_clust, ffilter="id != id_other")
+    df_clust_cartesian = utils.df_x_cartesian(
+        df_clust, ffilter="id != id_other")
 
     df_gforce_cartesian = df_clust_cartesian.selectExpr("id", "id_other",
                                                         "`x_other` - `x` as  `vx`",

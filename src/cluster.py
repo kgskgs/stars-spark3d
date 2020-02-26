@@ -13,6 +13,9 @@ def calc_cm(df_clust):
     it is equal to the mean of the coordinates
 
     #TODO generalize so it works with other data
+             N  
+    R = 1/M *Σ m_i*r_i
+            i=1      
     """
     df_cm = df_clust.selectExpr("mean(`x`) as `x`",
                                 "mean(`y`) as `y`",
@@ -54,6 +57,8 @@ def calc_T(df_clust, G=1):
     T = 1/2*Σ m_i*v_i^2
            i=1
 
+    [Aarseth, S. (2003). Gravitational N-Body Simulations: Tools and Algorithms
+    eq. (1.2)]
     """
 
     # get magnitutde of the velocity
@@ -74,6 +79,9 @@ def calc_U(df_clust, G=1):
       N   N   G*m_i*m_j
     - Σ   Σ  -----------
      i=1 j>i |r_i - r_j|
+
+    [Aarseth, S. (2003). Gravitational N-Body Simulations: Tools and Algorithms
+    eq. (1.2)]
     """
 
     df_clust_cartesian = utils.df_x_cartesian(df_clust,
@@ -100,6 +108,9 @@ def calc_E(df_clust, G=1, W=0):
     """
     calculate the total energy of the cluster
     in our case there is no external energy (W)
+
+    [Aarseth, S. (2003). Gravitational N-Body Simulations: Tools and Algorithms
+    eq. (1.5)]
     """
     return calc_T(df_clust) + calc_U(df_clust) + W
 
@@ -111,6 +122,9 @@ def calc_J(df_clust):
         N
     J = Σ r_i × m_i * v_i
        i=1
+
+    [Aarseth, S. (2003). Gravitational N-Body Simulations: Tools and Algorithms
+    eq. (1.3)]
     """
 
     df_J = df_clust.selectExpr("x", "y", "z",
