@@ -1,171 +1,193 @@
 #!/usr/bin/python3
-
 import utils
 
 
-def calc_F(df_clust, G=1):
-    """
-    calculate the force per unit mass acting on every particle
+class Simulation:
 
-            N     m_j*(r_i - r_j)
-    F = -G * Σ   -----------------
-            i!=j  |r_i - r_j|^3
+    def __init__(self, cluster, dt, ttarget, nparts, G=1, t=0):
 
-    r - position
-    m - mass
-    G - Gravitational Force Constant
+        self.t = t
+        self.ttarget = ttarget
+        self.dt = dt
 
-    [Aarseth, S. (2003). Gravitational N-Body Simulations: Tools and Algorithms
-    eq. (1.1)]
-    """
+        self.cluster = cluster
 
-    df_F_cartesian = calc_F_cartesian(df_clust)
+        self.G = G
 
-    df_F = utils.df_agg_sum(df_F_cartesian, "id", "Fx", "Fy", "Fz")
-    df_F = df_F.selectExpr("id",
-                           f"`Fx` * {-G} as Fx",
-                           f"`Fy` * {-G} as Fy",
-                           f"`Fz` * {-G} as Fz")
+        self.nparts = nparts
 
-    return df_F
+        self.methods = {
+            "eul1": self.advance_euler,
+            "eul2": self.advance_euler2
+        }
 
+    def run(self, method):
+        """
+        run the simulation with the chosen method
+        until the target time is reached
+        """
+        if self.t == self.ttarget:
+            raise ValueError("Target time is already reached")
 
-def calc_F_cartesian(df_clust):
-    """
-    The pairwise calculations to be used for calculating F
-    can be used to check which particle(s) contribute the most
-    to the effective force acting on a single one
-    """
-    df_clust_cartesian = utils.df_x_cartesian(
-        df_clust, ffilter="id != id_other")
+        nsteps = (self.ttarget - self.t) / self.dt
+        insteps = int(nsteps)
+        if nsteps != insteps:
+            raise ValueError("Number of steps should be an integer")
 
-    df_F_cartesian = df_clust_cartesian.selectExpr("id", "id_other", "m_other",
-                                                   "`x` - `x_other` as `diff(x)`",
-                                                   "`y` - `y_other` as `diff(y)`",
-                                                   "`z` - `z_other` as `diff(z)`"
+        self.cluster = self.methods[method](self.cluster, insteps)
+
+        self.t = self.ttarget
+
+    def calc_F(self, df_clust):
+        """
+        calculate the force per unit mass acting on every particle
+
+                 N    m_j*(r_i - r_j)
+        F = -G * Σ   -----------------
+                i!=j  |r_i - r_j|^3
+
+        r - position
+        m - mass
+        G - Gravitational Force Constant
+
+        [Aarseth, S. (2003). Gravitational N-Body Simulations: Tools and Algorithms
+        eq. (1.1)]
+        """
+
+        df_F_cartesian = self.calc_F_cartesian(df_clust)
+
+        df_F = utils.df_agg_sum(df_F_cartesian, "id", "Fx", "Fy", "Fz")
+        df_F = df_F.selectExpr("id",
+                               f"`Fx` * {-self.G} as Fx",
+                               f"`Fy` * {-self.G} as Fy",
+                               f"`Fz` * {-self.G} as Fz")
+
+        return df_F
+
+    def calc_F_cartesian(self, df_clust):
+        """
+        The pairwise calculations to be used for calculating F
+        can be used to check which particle(s) contribute the most
+        to the effective force acting on a single one
+        """
+        df_clust_cartesian = utils.df_x_cartesian(
+            df_clust, ffilter="id != id_other")
+
+        df_F_cartesian = df_clust_cartesian.selectExpr("id", "id_other", "m_other",
+                                                       "`x` - `x_other` as `diff(x)`",
+                                                       "`y` - `y_other` as `diff(y)`",
+                                                       "`z` - `z_other` as `diff(z)`"
+                                                       )
+        df_F_cartesian = df_F_cartesian.selectExpr("id", "id_other",
+                                                   "`diff(x)` * `m_other` as `num(x)`",
+                                                   "`diff(y)` * `m_other` as `num(y)`",
+                                                   "`diff(z)` * `m_other` as `num(z)`",
+                                                   "sqrt(`diff(x)` * `diff(x)` + `diff(y)`"
+                                                   "* `diff(y)` + `diff(z)` * `diff(z)`) as `denom`",
                                                    )
-    df_F_cartesian = df_F_cartesian.selectExpr("id", "id_other",
-                                               "`diff(x)` * `m_other` as `num(x)`",
-                                               "`diff(y)` * `m_other` as `num(y)`",
-                                               "`diff(z)` * `m_other` as `num(z)`",
-                                               "sqrt(`diff(x)` * `diff(x)` + `diff(y)`"
-                                               "* `diff(y)` + `diff(z)` * `diff(z)`) as `denom`",
-                                               )
-    df_F_cartesian = df_F_cartesian.selectExpr("id", "id_other",
-                                               "`num(x)` / pow(`denom`, 3) as `Fx`",
-                                               "`num(y)` / pow(`denom`, 3) as `Fy`",
-                                               "`num(z)` / pow(`denom`, 3) as `Fz`",
-                                               )
+        df_F_cartesian = df_F_cartesian.selectExpr("id", "id_other",
+                                                   "`num(x)` / pow(`denom`, 3) as `Fx`",
+                                                   "`num(y)` / pow(`denom`, 3) as `Fy`",
+                                                   "`num(z)` / pow(`denom`, 3) as `Fz`",
+                                                   )
 
-    return df_F_cartesian
+        return df_F_cartesian
 
+    def step_v(self, df_clust, df_F):
+        """
+        calculate v for a single timestep t, dt = t - t_0
+        v_i(t) = F_i*∆t + v_i(t0)
 
-def step_v(df_clust, df_F, dt):
-    """
-    calculate v for a single timestep t, dt = t - t_0
-    v_i(t) = F_i*∆t + v_i(t0)
+        [Aarseth, S. (2003). Gravitational N-Body Simulations: Tools and Algorithms
+        eq. (1.19)]
+        """
+        df_F = df_F.selectExpr("id",
+                               f"`Fx`*{self.dt} as `vx`",
+                               f"`Fy`*{self.dt} as `vy`",
+                               f"`Fz`*{self.dt} as `vz`"
+                               )
 
-    [Aarseth, S. (2003). Gravitational N-Body Simulations: Tools and Algorithms
-    eq. (1.19)]
-    """
-    df_F = df_F.selectExpr("id",
-                           f"`Fx`*{dt} as `vx`",
-                           f"`Fy`*{dt} as `vy`",
-                           f"`Fz`*{dt} as `vz`"
-                           )
+        df_v_t = utils.df_elementwise(df_F, df_clust, "id", "+",
+                                      "vx", "vy", "vz")
 
-    df_v_t = utils.df_elementwise(df_F, df_clust, "id", "+",
-                                  "vx", "vy", "vz")
+        return df_v_t
 
-    return df_v_t
+    def step_r(self, df_clust, df_F):
+        """
+        calculate r for a single timestep t, dt = t - t_0
+        r_i(t) = 1/2*F_i*∆t^2 + v_i(t0)*∆t + r_i(t0)
 
+        [Aarseth, S. (2003). Gravitational N-Body Simulations: Tools and Algorithms
+        eq. (1.19)]
+        """
 
-def step_r(df_clust, df_F, dt):
-    """
-    calculate r for a single timestep t, dt = t - t_0
-    r_i(t) = 1/2*F_i*∆t^2 + v_i(t0)*∆t + r_i(t0)
+        df_F = df_F.selectExpr("id",
+                               f"`Fx`*{self.dt}*{self.dt}/2 as `x`",
+                               f"`Fy`*{self.dt}*{self.dt}/2 as `y`",
+                               f"`Fz`*{self.dt}*{self.dt}/2 as `z`"
+                               )
 
-    [Aarseth, S. (2003). Gravitational N-Body Simulations: Tools and Algorithms
-    eq. (1.19)]
-    """
+        df_v0 = df_clust.selectExpr("id",
+                                    f"`vx` * {self.dt} as `x`",
+                                    f"`vy` * {self.dt} as `y`",
+                                    f"`vz` * {self.dt} as `z`"
+                                    )
 
-    df_F = df_F.selectExpr("id",
-                           f"`Fx`*{dt}*{dt}/2 as `x`",
-                           f"`Fy`*{dt}*{dt}/2 as `y`",
-                           f"`Fz`*{dt}*{dt}/2 as `z`"
-                           )
+        df_r_t = utils.df_elementwise(df_clust, df_v0, "id", "+",
+                                      "x", "y", "z")
 
-    df_v0 = df_clust.selectExpr("id",
-                                f"`vx` * {dt} as `x`",
-                                f"`vy` * {dt} as `y`",
-                                f"`vz` * {dt} as `z`"
-                                )
+        df_r_t = utils.df_elementwise(df_r_t, df_F, "id", "+",
+                                      "x", "y", "z")
 
-    df_r_t = utils.df_elementwise(df_clust, df_v0, "id", "+",
-                                  "x", "y", "z")
+        return df_r_t
 
-    df_r_t = utils.df_elementwise(df_r_t, df_F, "id", "+",
-                                  "x", "y", "z")
+    def advance_euler(self, df_clust, insteps):
+        """
+        advance step by step (by dt)
+        untill the target time is reached
+        """
 
-    return df_r_t
+        for _ in range(insteps):
+            # TODO change number of partitions based on configuration
+            df_clust = df_clust.localCheckpoint().repartition(self.nparts, "id")
+            df_F = self.calc_F(df_clust).localCheckpoint()
+            df_v, df_r = self.step_v(df_clust, df_F), self.step_r(
+                df_clust, df_F)
 
+            df_clust = df_r.join(df_v, "id").join(df_clust.select("id", "m"), "id")
 
-def advance_euler(df_clust, dt, ttarget, G=1):
-    """
-    advance step by step (by dt)
-    untill the target time is reached
-    """
-    nsteps = ttarget / dt
-    insteps = int(nsteps)
-    if nsteps != insteps:
-        raise ValueError(
-            f"Number of steps should be an integer, {ttarget}%{dt}!=0")
+        return df_clust
 
-    for _ in range(insteps):
-        # TODO change number of partitions based on configuration
-        df_clust = df_clust.localCheckpoint().repartition(16, "id")
-        df_F = calc_F(df_clust, G).localCheckpoint()
-        df_v, df_r = step_v(df_clust, df_F, dt), step_r(df_clust, df_F, dt)
+    def advance_euler2(self, df_clust, insteps):
+        """
+        "improved Euler method" - uses average F for steps
+        advance step by step (by dt)
+        untill the target time is reached
+        """
 
-        df_clust = df_r.join(df_v, "id").join(df_clust.select("id", "m"), "id")
+        df_F = self.calc_F(df_clust).localCheckpoint()
+        for _ in range(insteps):
+            # TODO change number of partitions based on configuration
+            df_clust = df_clust.localCheckpoint().repartition(self.nparts, "id")
 
-    return df_clust
+            df_r_provisional = self.step_r(df_clust, df_F).join(
+                df_clust.select("id", "m"), "id")
 
+            df_F_prov = self.calc_F(df_r_provisional).localCheckpoint()
 
-def advance_euler2(df_clust, dt, ttarget, G=1):
-    """
-    "improved Euler method"
-    advance step by step (by dt)
-    untill the target time is reached
-    """
-    nsteps = ttarget / dt
-    insteps = int(nsteps)
-    if nsteps != insteps:
-        raise ValueError(
-            f"Number of steps should be an integer, {ttarget}%{dt}!=0")
+            df_F = (utils.df_elementwise(
+                df_F, df_F_prov, "id", "+", "Fx", "Fy", "Fz")
+                .selectExpr("id",
+                            "`Fx` / 2 as `Fx`",
+                            "`Fy` / 2 as `Fy`",
+                            "`Fz` / 2 as `Fz`"))
+            df_F.localCheckpoint()
 
-    df_F = calc_F(df_clust, G).localCheckpoint()
-    for _ in range(insteps):
-        # TODO change number of partitions based on configuration
-        df_clust = df_clust.localCheckpoint().repartition(4, "id")
+            df_v, df_r = self.step_v(df_clust, df_F), self.step_r(df_clust, df_F)
 
-        df_r_provisional = step_r(df_clust, df_F, dt).join(
-            df_clust.select("id", "m"), "id")
+            df_clust = df_r.join(df_v, "id").join(df_clust.select("id", "m"), "id")
 
-        df_F_prov = calc_F(df_r_provisional, G).localCheckpoint()
-
-        df_F = (utils.df_elementwise(
-            df_F, df_F_prov, "id", "+", "Fx", "Fy", "Fz")
-            .selectExpr("id",
-                        "`Fx` / 2 as `Fx`",
-                        "`Fy` / 2 as `Fy`",
-                        "`Fz` / 2 as `Fz`"))
-        df_F.localCheckpoint()
-        df_v, df_r = step_v(df_clust, df_F, dt), step_r(df_clust, df_F, dt)
-
-        df_clust = df_r.join(df_v, "id").join(df_clust.select("id", "m"), "id")
-
-    return df_clust
+        return df_clust
 
 
 def calc_gforce_cartesian(df_clust, G=1):
