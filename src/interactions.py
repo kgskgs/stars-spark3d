@@ -3,9 +3,28 @@ import utils
 
 
 class Simulation:
+    """
+    set the simulation conditions
 
+    currently available computation methods:
+    *eul1 - basic step method
+    *eul2 - version of eul1 where average force over the period dt is used
+
+    :param cluster: cluster data - position and velocity [broken into componenets], and mass
+    :type cluster: dataframe, with schema schemas.clust_input
+    :param dt: time step for the simulation
+    :type dt: float
+    :param ttarget: target time to reach when running the simulation
+    :type ttarget: int
+    :param nparts: number of partitions to use for dataframes that will undergo cartesian multiplication
+    :type nparts: int
+    :param G: gravitational constant to use, defaults to 1
+    :type G: float, optional
+    :param t: timestamp of the current cluster data, defaults to 0
+    :type t: int, optional
+    """
     def __init__(self, cluster, dt, ttarget, nparts, G=1, t=0):
-
+        """Constructor"""
         self.t = t
         self.ttarget = ttarget
         self.dt = dt
@@ -23,8 +42,13 @@ class Simulation:
 
     def run(self, method):
         """
-        run the simulation with the chosen method
-        until the target time is reached
+        run the simulation with the chosen method until the target time is reached
+
+        :param method: computation method to use
+        :type method: string, {eul1,eul2}
+
+        :raises: ValueError if the target time is already reached
+        :raises: ValueError if the target time cannot be evenly divided into dt-sized steps
         """
         if self.t == self.ttarget:
             raise ValueError("Target time is already reached")
@@ -52,7 +76,13 @@ class Simulation:
 
         [Aarseth, S. (2003). Gravitational N-Body Simulations: Tools and Algorithms
         eq. (1.1)]
+
+        :param df_clust: cluster data - position, velocity, and mass
+        :type df_clust: dataframe, with schema schemas.clust_input
+        :returns: force per unit of mass
+        :rtype: dataframe, with schema schemas.F_id
         """
+
 
         df_F_cartesian = self.calc_F_cartesian(df_clust)
 
@@ -69,6 +99,11 @@ class Simulation:
         The pairwise calculations to be used for calculating F
         can be used to check which particle(s) contribute the most
         to the effective force acting on a single one
+
+        :param df_clust: cluster data - position, velocity, and mass
+        :type df_clust: dataframe, with schema schemas.clust_input
+        :returns: the forces acting between every two particles
+        :rtype: dataframe, with schema schemas.F_cartesian
         """
         df_clust_cartesian = utils.df_x_cartesian(
             df_clust, ffilter="id != id_other")
@@ -100,6 +135,13 @@ class Simulation:
 
         [Aarseth, S. (2003). Gravitational N-Body Simulations: Tools and Algorithms
         eq. (1.19)]
+
+        :param df_clust: cluster data - position, velocity, and mass
+        :type df_clust: dataframe, with schema schemas.clust_input
+        :param df_F: force per unit of mass acting on each particle
+        :type df_F: dataframe, with schema schemas.F_id
+        :returns: the new velocity of each particle
+        :rtype: dataframe, with schema schemas.v_id
         """
         df_F = df_F.selectExpr("id",
                                f"`Fx`*{self.dt} as `vx`",
@@ -119,6 +161,13 @@ class Simulation:
 
         [Aarseth, S. (2003). Gravitational N-Body Simulations: Tools and Algorithms
         eq. (1.19)]
+
+        :param df_clust: cluster data - position, velocity, and mass
+        :type df_clust: dataframe, with schema schemas.clust_input
+        :param df_F: force per unit of mass acting on each particle
+        :type df_F: dataframe, with schema schemas.F_id
+        :returns: the new position of each particle
+        :rtype: dataframe, with schema schemas.r_id
         """
 
         df_F = df_F.selectExpr("id",
@@ -143,12 +192,18 @@ class Simulation:
 
     def advance_euler(self, df_clust, insteps):
         """
-        advance step by step (by dt)
-        untill the target time is reached
+        Advance step by step (by dt) for the specified number of steps.
+        re-evaluate the force per unit of mass after each step for use in the next one
+
+        :param df_clust: cluster data - position, velocity, and mass
+        :type df_clust: dataframe, with schema schemas.clust_input
+        :param insteps: number of steps to advance
+        :type insteps: int
+        :returns: the new positions and velocities of the particles of the cluster
+        :rtype: dataframe, with schema schemas.clust_input
         """
 
         for _ in range(insteps):
-            # TODO change number of partitions based on configuration
             df_clust = df_clust.localCheckpoint().repartition(self.nparts, "id")
             df_F = self.calc_F(df_clust).localCheckpoint()
             df_v, df_r = self.step_v(df_clust, df_F), self.step_r(
@@ -160,14 +215,19 @@ class Simulation:
 
     def advance_euler2(self, df_clust, insteps):
         """
-        "improved Euler method" - uses average F for steps
-        advance step by step (by dt)
-        untill the target time is reached
+        Advance step by step (by dt) for the specified number of steps.
+        impover Euler method where the average force over the interval dt is used
+
+        :param df_clust: cluster data - position, velocity, and mass
+        :type df_clust: dataframe, with schema schemas.clust_input
+        :param insteps: number of steps to advance
+        :type insteps: int
+        :returns: the new positions and velocities of the particles of the cluster
+        :rtype: dataframe, with schema schemas.clust_input
         """
 
         df_F = self.calc_F(df_clust).localCheckpoint()
         for _ in range(insteps):
-            # TODO change number of partitions based on configuration
             df_clust = df_clust.localCheckpoint().repartition(self.nparts, "id")
 
             df_r_provisional = self.step_r(df_clust, df_F).join(
