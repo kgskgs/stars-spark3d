@@ -50,7 +50,7 @@ class Simulation:
         :raises: ValueError if the target time is already reached
         :raises: ValueError if the target time cannot be evenly divided into dt-sized steps
         """
-        if self.t == self.ttarget:
+        if self.t >= self.ttarget:
             raise ValueError("Target time is already reached")
 
         nsteps = (self.ttarget - self.t) / self.dt
@@ -226,12 +226,14 @@ class Simulation:
         :rtype: dataframe, with schema schemas.clust_input
         """
 
+        raise NotImplementedError("revise algorithm")
+
         df_F = self.calc_F(df_clust).localCheckpoint()
         for _ in range(insteps):
-            df_clust = df_clust.localCheckpoint().repartition(self.nparts, "id")
+            df_clust = df_clust.localCheckpoint()
 
             df_r_provisional = self.step_r(df_clust, df_F).join(
-                df_clust.select("id", "m"), "id")
+                df_clust.select("id", "m"), "id").repartition(self.nparts, "id")
 
             df_F_prov = self.calc_F(df_r_provisional).localCheckpoint()
 

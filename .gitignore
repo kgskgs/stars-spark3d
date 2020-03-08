@@ -1,3 +1,6 @@
 **/__pycache__/
 **/spark-warehouse/
 gravity_test.cmd
+*.sublime-workspace
+*.patch
+*.diff
