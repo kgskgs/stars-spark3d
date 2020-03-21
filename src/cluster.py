@@ -13,9 +13,9 @@ def calc_cm(df_clust):
     it is equal to the mean of the coordinates
 
     #TODO generalize so it works with other data
-             N  
+             N
     R = 1/M *Σ m_i*r_i
-            i=1      
+            i=1
     """
     df_cm = df_clust.selectExpr("mean(`x`) as `x`",
                                 "mean(`y`) as `y`",

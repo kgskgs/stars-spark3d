@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 import numpy as np
 import os
-from math import sqrt
-from scipy.constants import G
 from matplotlib import pyplot as pl
 import re
 
@@ -63,7 +61,7 @@ def df_agg_sum(df, aggCol, *sumCols):
 def df_x_cartesian(df, ffilter=None):
     """
     get the cartesian product of a dataframe with itself
-    
+
     :param str ffilter: SQL string to filter the final product by
     """
     renameCols = [f"`{col}` as `{col}_other`" for col in df.columns]
@@ -166,6 +164,32 @@ def mse(df, df_target, idCol, rmse=False):
     return df_mse.selectExpr(*meanCols)
 
 
+def df_collectLimit(df, limit, *cols, sortCol=None):
+    """
+    Collect from a dataframe up to a limit
+
+    :param df: dataframe to collect
+    :type df: pyspark.sql.DataFrame
+    :param limit: maximum number of rows to collect
+    :type limit: int
+    :param *cols: columns to collect
+    :type *cols: str
+    :param sortCol: column to sort by (so you always get the same rows if needed)
+    :type sortCol: str
+    :returns: collected columns of df if col specified or all the columns
+    :rtype: list
+    """
+    if sortCol:
+        df = df.sort(sortCol)
+
+    if df.count() > limit:
+        df = df.limit(limit)
+
+    if cols:
+        return df.select(*cols).collect()
+    return df.collect()
+
+
 """plots"""
 
 
@@ -200,29 +224,3 @@ def clean_str(string):
     replace spaces with '_'"""
     string = re.sub(r"\s", "_", string.strip())
     return re.sub(r"[^\w]", "", string)
-
-
-def vlen3d(v):
-    """calucalte the length of a 3d vector"""
-    return sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2])
-
-
-def ptv(p1, p2):
-    """get a vector from start and end ponts"""
-    return p2 - p1
-
-
-def normv(v, length=None):
-    """normalize a vector"""
-    if length is not None:
-        length = vlen3d(v)
-    return v / length
-
-
-def get_gforce(coords1, coords2, mass1, mass2):
-    """calculate gravitational force between two points"""
-    if all(coords1 == coords2):
-        return np.zeros(3)
-    vec = ptv(coords1, coords2)
-    dist = vlen3d(vec)
-    return normv(vec, dist) * G * mass1 * mass2 / dist**2

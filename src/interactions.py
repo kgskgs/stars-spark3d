@@ -11,18 +11,19 @@ class Simulation:
     *eul2 - version of eul1 where average force over the period dt is used
 
     :param cluster: cluster data - position and velocity [broken into componenets], and mass
-    :type cluster: dataframe, with schema schemas.clust_input
+    :type cluster: pyspark.sql.DataFrame, with schema schemas.clust_input
     :param dt: time step for the simulation
     :type dt: float
     :param ttarget: target time to reach when running the simulation
     :type ttarget: int
-    :param nparts: number of partitions to use for dataframes that will undergo cartesian multiplication
+    :param nparts: number of partitions to use for dataframes that will undergo cartesian multiplication with themselves
     :type nparts: int
     :param G: gravitational constant to use, defaults to 1
     :type G: float, optional
     :param t: timestamp of the current cluster data, defaults to 0
     :type t: int, optional
     """
+
     def __init__(self, cluster, dt, ttarget, nparts, G=1, t=0):
         """Constructor"""
         self.t = t
@@ -58,9 +59,8 @@ class Simulation:
         if nsteps != insteps:
             raise ValueError("Number of steps should be an integer")
 
-        self.cluster = self.methods[method](self.cluster, insteps)
-
-        self.t = self.ttarget
+        #self.cluster = 
+        self.methods[method](insteps)
 
     def calc_F(self, df_clust):
         """
@@ -78,13 +78,13 @@ class Simulation:
         eq. (1.1)]
 
         :param df_clust: cluster data - position, velocity, and mass
-        :type df_clust: dataframe, with schema schemas.clust_input
+        :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust_input
         :returns: force per unit of mass
-        :rtype: dataframe, with schema schemas.F_id
+        :rtype: pyspark.sql.DataFrame, with schema schemas.F_id
         """
 
-
         df_F_cartesian = self.calc_F_cartesian(df_clust)
+
 
         df_F = utils.df_agg_sum(df_F_cartesian, "id", "Fx", "Fy", "Fz")
         df_F = df_F.selectExpr("id",
@@ -101,9 +101,9 @@ class Simulation:
         to the effective force acting on a single one
 
         :param df_clust: cluster data - position, velocity, and mass
-        :type df_clust: dataframe, with schema schemas.clust_input
+        :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust_input
         :returns: the forces acting between every two particles
-        :rtype: dataframe, with schema schemas.F_cartesian
+        :rtype: pyspark.sql.DataFrame, with schema schemas.F_cartesian
         """
         df_clust_cartesian = utils.df_x_cartesian(
             df_clust, ffilter="id != id_other")
@@ -137,11 +137,11 @@ class Simulation:
         eq. (1.19)]
 
         :param df_clust: cluster data - position, velocity, and mass
-        :type df_clust: dataframe, with schema schemas.clust_input
+        :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust_input
         :param df_F: force per unit of mass acting on each particle
-        :type df_F: dataframe, with schema schemas.F_id
+        :type df_F: pyspark.sql.DataFrame, with schema schemas.F_id
         :returns: the new velocity of each particle
-        :rtype: dataframe, with schema schemas.v_id
+        :rtype: pyspark.sql.DataFrame, with schema schemas.v_id
         """
         df_F = df_F.selectExpr("id",
                                f"`Fx`*{self.dt} as `vx`",
@@ -163,11 +163,11 @@ class Simulation:
         eq. (1.19)]
 
         :param df_clust: cluster data - position, velocity, and mass
-        :type df_clust: dataframe, with schema schemas.clust_input
+        :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust_input
         :param df_F: force per unit of mass acting on each particle
-        :type df_F: dataframe, with schema schemas.F_id
+        :type df_F: pyspark.sql.DataFrame, with schema schemas.F_id
         :returns: the new position of each particle
-        :rtype: dataframe, with schema schemas.r_id
+        :rtype: pyspark.sql.DataFrame, with schema schemas.r_id
         """
 
         df_F = df_F.selectExpr("id",
@@ -190,50 +190,47 @@ class Simulation:
 
         return df_r_t
 
-    def advance_euler(self, df_clust, insteps):
+    def advance_euler(self, insteps):
         """
         Advance step by step (by dt) for the specified number of steps.
         re-evaluate the force per unit of mass after each step for use in the next one
 
-        :param df_clust: cluster data - position, velocity, and mass
-        :type df_clust: dataframe, with schema schemas.clust_input
         :param insteps: number of steps to advance
         :type insteps: int
         :returns: the new positions and velocities of the particles of the cluster
-        :rtype: dataframe, with schema schemas.clust_input
+        :rtype: pyspark.sql.DataFrame, with schema schemas.clust_input
         """
 
         for _ in range(insteps):
-            df_clust = df_clust.localCheckpoint().repartition(self.nparts, "id")
-            df_F = self.calc_F(df_clust).localCheckpoint()
-            df_v, df_r = self.step_v(df_clust, df_F), self.step_r(
-                df_clust, df_F)
+            self.cluster = self.cluster.localCheckpoint().repartition(self.nparts, "id")
+            df_F = self.calc_F(self.cluster).localCheckpoint()
+            df_v, df_r = self.step_v(self.cluster, df_F), self.step_r(
+                self.cluster, df_F)
 
-            df_clust = df_r.join(df_v, "id").join(df_clust.select("id", "m"), "id")
+            self.cluster = df_r.join(df_v, "id").join(self.cluster.select("id", "m"), "id")
+            self.t += self.dt
 
-        return df_clust
+        #return df_clust
 
-    def advance_euler2(self, df_clust, insteps):
+    def advance_euler2(self, insteps):
         """
         Advance step by step (by dt) for the specified number of steps.
         impover Euler method where the average force over the interval dt is used
 
-        :param df_clust: cluster data - position, velocity, and mass
-        :type df_clust: dataframe, with schema schemas.clust_input
         :param insteps: number of steps to advance
         :type insteps: int
         :returns: the new positions and velocities of the particles of the cluster
-        :rtype: dataframe, with schema schemas.clust_input
+        :rtype: pyspark.sql.DataFrame, with schema schemas.clust_input
         """
 
         raise NotImplementedError("revise algorithm")
 
-        df_F = self.calc_F(df_clust).localCheckpoint()
+        df_F = self.calc_F(self.cluster).localCheckpoint()
         for _ in range(insteps):
-            df_clust = df_clust.localCheckpoint()
+            self.cluster = self.cluster.localCheckpoint()
 
-            df_r_provisional = self.step_r(df_clust, df_F).join(
-                df_clust.select("id", "m"), "id").repartition(self.nparts, "id")
+            df_r_provisional = self.step_r(self.cluster, df_F).join(
+                self.cluster.select("id", "m"), "id").repartition(self.nparts, "id")
 
             df_F_prov = self.calc_F(df_r_provisional).localCheckpoint()
 
@@ -245,11 +242,11 @@ class Simulation:
                             "`Fz` / 2 as `Fz`"))
             df_F.localCheckpoint()
 
-            df_v, df_r = self.step_v(df_clust, df_F), self.step_r(df_clust, df_F)
+            df_v, df_r = self.step_v(self.cluster, df_F), self.step_r(self.cluster, df_F)
 
-            df_clust = df_r.join(df_v, "id").join(df_clust.select("id", "m"), "id")
+            self.cluster = df_r.join(df_v, "id").join(self.cluster.select("id", "m"), "id")
+            self.t += self.dt
 
-        return df_clust
 
 
 def calc_gforce_cartesian(df_clust, G=1):
