@@ -16,17 +16,38 @@ from pyspark3d.visualisation import scatter3d_mpl
 
 
 def load_df(fname, pth, schema=None, header="true", limit=None, part=None, **kwargs):
-    """wrapper - read dataframe from parquet or csv"""
-    spark = SparkSession.builder.getOrCreate()
+    """
+    wrapper for pyspark.sql.SparkSession.load - read dataframe from parquet or csv
 
-    if "parquet" in fname:
+    :param fname: filename(s) - load accepts wildcards
+    :type fname: str
+    :param pth: path to the folder the file(s) is in
+    :type pth: str
+    :param **kwargs: additional arguments to pass to load
+    :type **kwargs: dict
+    :param schema: schema to use for the datframe, defaults to None
+    :type schema: pyspark.sql.types.StructType, optional
+    :param header: does the input data have a header, defaults to "true"
+    :type header: str {"true"/"false"}, optional
+    :param limit: if set reads only the first {limit} rows, defaults to None
+    :type limit: int, optional
+    :param part: if set repartitions the datafarame by this parameter (pyspark.sql.DataFrame.repartition), defaults to None
+    :type part: *str - repartition with the default number of partitions by this column name
+                *int - repartition into this number number of partitions, optional
+    :returns: the resulting dataframe
+    :rtype: pyspark.sql.DataFrame
+    :raises: ValueError if the file (fname) extension is not 'csv' or 'parquet'
+    """
+    if fname.endswith("parquet"):
         fformat = "parquet"
-    elif "csv" in fname:
+    elif fname.endswith("csv"):
         fformat = "csv"
     else:
         raise ValueError(
             "can't load data, specify file extension"
             " [parquet, csv] in the filename")
+
+    spark = SparkSession.builder.getOrCreate()
 
     floc = os.path.join(pth, fname)
 
@@ -41,7 +62,23 @@ def load_df(fname, pth, schema=None, header="true", limit=None, part=None, **kwa
 
 
 def save_df(df, fname, pth, fformat="parquet", compression="gzip", **kwargs):
-    """wrapper - save a dataframe"""
+    """wrapper for pyspark.sql.DataFrame.save - save a dataframe
+
+    :param df: dataframe to save
+    :type df: pyspark.sql.DataFrame
+    :param fname: filename(s) - load accepts wildcards
+    :type fname: str
+    :param pth: path to the folder the file(s) is in
+    :type pth: str
+    :param **kwargs: additional arguments to pass to save
+    :type **kwargs: dict
+    :param fformat: format to save in, defaults to "parquet"
+    :type fformat: str, optional
+    :param compression: compression to use, defaults to "gzip"
+    :type compression: str, optional
+    :returns: path to the saved dataframe
+    :rtype: str
+    """
     sc = SparkContext.getOrCreate()
     sloc = os.path.join(pth, "{}-{}-{}".format(fname,
                                                clean_str(sc.appName),
@@ -52,7 +89,19 @@ def save_df(df, fname, pth, fformat="parquet", compression="gzip", **kwargs):
 
 
 def df_agg_sum(df, aggCol, *sumCols):
-    """dataframe - aggregate by column and sum"""
+    """dataframe - aggregate by column and sum
+
+    groups all the rows that have the same value for aggCol,
+    and sums their sumCols
+    :param df: dataframe to use
+    :type df: pyspark.sql.DataFrame
+    :param aggCol: column to aggrate on 
+    :type aggCol: str
+    :param *sumCols: columns to sum
+    :type *sumCols: str
+    :returns: resulting dataframe
+    :rtype: pyspark.sql.DataFrame
+    """
     df_agg = df.groupBy(aggCol).sum(*sumCols)
     renameCols = [f"`sum({col})` as `{col}`" for col in sumCols]
     return df_agg.selectExpr(aggCol, *renameCols)
@@ -62,7 +111,12 @@ def df_x_cartesian(df, ffilter=None):
     """
     get the cartesian product of a dataframe with itself
 
-    :param str ffilter: SQL string to filter the final product by
+    :param df: dataframe to use
+    :type df: pyspark.sql.DataFrame
+    :param ffilter: SQL string to filter the final product by
+    :type ffilter: str
+    :returns: resulting dataframe
+    :rtype: pyspark.sql.DataFrame
     """
     renameCols = [f"`{col}` as `{col}_other`" for col in df.columns]
     df_cart = df.crossJoin(df.selectExpr(renameCols))
@@ -72,7 +126,15 @@ def df_x_cartesian(df, ffilter=None):
 
 
 def df_add_index(df, order_col):
-    """add an index column to a dataframe"""
+    """add an index column to a dataframe
+
+    :param df: dataframe to use
+    :type df: pyspark.sql.DataFrame
+    :param order_col: column to order by
+    :type order_col: str
+    :returns: resulting dataframe
+    :rtype: pyspark.sql.DataFrame
+    """
     return df.withColumn('index',
                          row_number().over(Window.orderBy(order_col)) - 1)
 
@@ -80,7 +142,23 @@ def df_add_index(df, order_col):
 def df_elementwise(df, df_other, idCol, op, *cols, renameOutput=False):
     """join two dataframes with the same schema by id,
     and perform an elementwise operation on the
-    selected columns"""
+    selected columns
+
+    :param df: first dataframe to use
+    :type df: pyspark.sql.DataFrame
+    :param df_other: second dataframe to use
+    :type df_other: pyspark.sql.DataFrame
+    :param idCol: column containing the matching ids
+    :type idCol: str
+    :param op: operation to perform
+    :type op: str {"+", "-", "*", "/"}
+    :param *cols: columns to perform the operation on
+    :type *cols: str
+    :param renameOutput: if True, add the opeartion performed to the resulting columns' names, defaults to False
+    :type renameOutput: bool, optional
+    :returns: resulting dataframe
+    :rtype: pyspark.sql.DataFrame
+    """
 
     opStr = {"+": "sum", "-": "dif", "*": "mul", "/": "div"}
 
@@ -112,7 +190,17 @@ class NpAccumulatorParam(AccumulatorParam):
 
 def df_compare(df, df_other, idCol):
     """comapre two dataframes with the same schema and ids
-    by taking the absolute difference of each row"""
+    by taking the absolute difference of each row
+
+    :param df: first dataframe to use
+    :type df: pyspark.sql.DataFrame
+    :param df_other: second dataframe to use
+    :type df_other: pyspark.sql.DataFrame
+    :param idCol: column containing the matching ids
+    :type idCol: str
+    :returns: resulting dataframe
+    :rtype: pyspark.sql.DataFrame
+    """
 
     cols = df.columns[:]
     cols.remove(idCol)
@@ -130,6 +218,15 @@ def simple_error(df, df_target, idCol):
 
     note: since inner join is used
     elements not peresent in one of the dataframes are ignored
+
+    :param df: first dataframe to use
+    :type df: pyspark.sql.DataFrame
+    :param df_target: second dataframe to use
+    :type df_target: pyspark.sql.DataFrame
+    :param idCol: column containing the matching ids
+    :type idCol: str
+    :returns: total difference
+    :rtype: float
     """
 
     df_adiff = df_compare(df, df_target, idCol)
@@ -140,9 +237,19 @@ def simple_error(df, df_target, idCol):
 
 
 def mse(df, df_target, idCol, rmse=False):
-    """
-    get the mean squared error or root mean squared error
+    """   get the mean squared error or root mean squared error
     between two dataframes with the same schema
+    
+    :param df: first dataframe to use
+    :type df: pyspark.sql.DataFrame
+    :param df_target: second dataframe to use
+    :type df_target: pyspark.sql.DataFrame
+    :param idCol: column containing the matching ids
+    :type idCol: str
+    :param rmse: get the root mean squared error instead, defaults to False
+    :type rmse: bool, optional
+    :returns: [r]mse
+    :rtype: float
     """
     cols = df.columns[:]
     cols.remove(idCol)
@@ -194,7 +301,16 @@ def df_collectLimit(df, limit, *cols, sortCol=None):
 
 
 def plot_cluster_scater(df_clust, title="Plot", fout=None):
-    """draw a scatter plot of a cluster"""
+    """draw a scatter plot of a cluster
+    
+
+    :param df_clust: dataframe containing the cluster
+    :type df_clust: pyspark.sql.DataFrame
+    :param title: title of the plot, defaults to "Plot"
+    :type title: str, optional
+    :param fout: save the plot to a file if provided, defaults to None
+    :type fout: str, optional
+    """
     coords = np.transpose(df_clust.select("x", "y", "z").collect())
 
     scatter3d_mpl(coords[0], coords[1], coords[2],
@@ -207,7 +323,17 @@ def plot_cluster_scater(df_clust, title="Plot", fout=None):
 
 
 def plot_histogram(df, col, title="Plot", fout=None):
-    """Plot a single dataframe column as a histogram"""
+    """Plot a single dataframe column as a histogram
+    
+    :param df_clust: dataframe to use
+    :type df: pyspark.sql.DataFrame
+    :param col: column to plot the histogram for
+    :type col: str
+    :param title: title of the plot, defaults to "Plot"
+    :type title: str, optional
+    :param fout: save the plot to a file if provided, defaults to None
+    :type fout: str, optional
+    """
     arr_gfs = np.array(df.select(col).collect())\
         .transpose()[0]  # collect returns a list of lists
 
@@ -221,6 +347,12 @@ def plot_histogram(df, col, title="Plot", fout=None):
 
 def clean_str(string):
     """clean a string from everything except word characters,
-    replace spaces with '_'"""
+    replace spaces with '_'
+
+    :param string: string to clean
+    :type string: str
+    :returns: result
+    :rtype: str
+    """
     string = re.sub(r"\s", "_", string.strip())
     return re.sub(r"[^\w]", "", string)
