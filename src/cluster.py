@@ -7,31 +7,46 @@ import utils
 
 
 def calc_cm(df_clust):
-    """
-    calcuate the center of mass of the cluster
+    """  calcuate the center of mass of the cluster
     in our dataset all the masses are equal, so
     it is equal to the mean of the coordinates
 
-    #TODO generalize so it works with other data
-             N
+                     N
     R = 1/M *Σ m_i*r_i
-            i=1
-    """
-    df_cm = df_clust.selectExpr("mean(`x`) as `x`",
-                                "mean(`y`) as `y`",
-                                "mean(`z`) as `z`")
+                    i=1
 
+    :param df_clust: cluster data - position, velocity, and mass
+    :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust_input
+    :returns: center of mass
+    :rtype: pyspark.sql.types.Row
+    """
+
+    df_cm = df_clust.selectExpr("m", "`x` * `m` as `xm`",
+                                "`y` * `m` as `ym`",
+                                "`z` * `m` as `zm`",)
+    # sum
+    df_cm = df_cm.groupBy().sum()
+    df_cm = df_cm.selectExpr("`sum(xm)` / `sum(m)` as `x`",
+                             "`sum(ym)` / `sum(m)` as `y`",
+                             "`sum(zm)` / `sum(m)` as `z`",)
     return df_cm.collect()[0]
 
 
 def calc_rh(df_clust, cm):
-    """
-    calculate the half-mass radius of the cluster
+    """  calculate the half-mass radius of the cluster
     since all the masses are equal that is the distance
     from the center to the n/2-th closest star
 
     #TODO generalize so it works with other data
+
+    :param df_clust: cluster data - position, velocity, and mass
+    :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust_input
+    :param cm: cluster center of mass
+    :type cm: iterable ([x, y, z])
+    :returns: half-mass radius
+    :rtype: float
     """
+
     half_count = ceil(df_clust.count() / 2)
 
     df_dist = df_clust.selectExpr("id",
@@ -53,9 +68,9 @@ def calc_T(df_clust, G=1):
     """
     calculate the total kinetic energy of the cluster
 
-            N
+                    N
     T = 1/2*Σ m_i*v_i^2
-           i=1
+                 i=1
 
     [Aarseth, S. (2003). Gravitational N-Body Simulations: Tools and Algorithms
     eq. (1.2)]
@@ -76,7 +91,7 @@ def calc_T(df_clust, G=1):
 def calc_U(df_clust, G=1):
     """
     calculate the total potential energy of the cluster
-      N   N   G*m_i*m_j
+        N   N   G*m_i*m_j
     - Σ   Σ  -----------
      i=1 j>i |r_i - r_j|
 
@@ -119,9 +134,9 @@ def calc_J(df_clust):
     """
     calculate the total angular momentum of the cluster
 
-        N
+            N
     J = Σ r_i × m_i * v_i
-       i=1
+         i=1
 
     [Aarseth, S. (2003). Gravitational N-Body Simulations: Tools and Algorithms
     eq. (1.3)]
