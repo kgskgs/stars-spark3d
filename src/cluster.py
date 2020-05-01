@@ -11,9 +11,9 @@ def calc_cm(df_clust):
     in our dataset all the masses are equal, so
     it is equal to the mean of the coordinates
 
-                     N
+             N
     R = 1/M *Σ m_i*r_i
-                    i=1
+            i=1
 
     :param df_clust: cluster data - position, velocity, and mass
     :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust_input
@@ -65,16 +65,23 @@ def calc_rh(df_clust, cm):
 
 
 def calc_T(df_clust, G=1):
-    """
-    calculate the total kinetic energy of the cluster
+    """calculate the total kinetic energy of the cluster
 
-                    N
+            N
     T = 1/2*Σ m_i*v_i^2
-                 i=1
+           i=1
 
     [Aarseth, S. (2003). Gravitational N-Body Simulations: Tools and Algorithms
     eq. (1.2)]
+    
+    :param df_clust: [description]
+    :type df_clust: [type]
+    :param G: [description], defaults to 1
+    :type G: number, optional
+    :returns: [description]
+    :rtype: {[type]}
     """
+
 
     # get magnitutde of the velocity
     df_T = df_clust.selectExpr("m",
@@ -91,7 +98,7 @@ def calc_T(df_clust, G=1):
 def calc_U(df_clust, G=1):
     """
     calculate the total potential energy of the cluster
-        N   N   G*m_i*m_j
+      N   N   G*m_i*m_j
     - Σ   Σ  -----------
      i=1 j>i |r_i - r_j|
 
@@ -134,9 +141,9 @@ def calc_J(df_clust):
     """
     calculate the total angular momentum of the cluster
 
-            N
+        N
     J = Σ r_i × m_i * v_i
-         i=1
+       i=1
 
     [Aarseth, S. (2003). Gravitational N-Body Simulations: Tools and Algorithms
     eq. (1.3)]
