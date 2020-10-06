@@ -239,7 +239,7 @@ def simple_error(df, df_target, idCol):
 def mse(df, df_target, idCol, rmse=False):
     """   get the mean squared error or root mean squared error
     between two dataframes with the same schema
-    
+
     :param df: first dataframe to use
     :type df: pyspark.sql.DataFrame
     :param df_target: second dataframe to use
@@ -300,9 +300,36 @@ def df_collectLimit(df, limit, *cols, sortCol=None):
 """plots"""
 
 
-def plot_cluster_scater(df_clust, title="Plot", fout=None):
+def plot_cluster_scater2d(df_clust, axes=["x", "y"], title="Plot", fout=None):
     """draw a scatter plot of a cluster
-    
+
+    :param df_clust: dataframe containing the cluster
+    :type df_clust: pyspark.sql.DataFrame
+    :param title: title of the plot, defaults to "Plot"
+    :type title: str, optional
+    :param fout: save the plot to a file if provided, defaults to None
+    :type fout: str, optional
+    :param axes: axes to plot
+    :type axes: list, optional    
+    """
+
+    coords = np.transpose(df_clust.select(*axes).collect())
+
+    pl.scatter(coords[0], coords[1], s=1,
+               label="Data set", **{"facecolors": "blue", "marker": "."})
+
+    pl.xlabel(axes[0])
+    pl.ylabel(axes[1])
+
+    pl.title(title)
+    if fout is not None:
+        pl.savefig(fout)
+    pl.show()
+
+
+
+def plot_cluster_scater3d(df_clust, title="Plot", fout=None):
+    """draw a scatter plot of a cluster
 
     :param df_clust: dataframe containing the cluster
     :type df_clust: pyspark.sql.DataFrame
@@ -324,7 +351,7 @@ def plot_cluster_scater(df_clust, title="Plot", fout=None):
 
 def plot_histogram(df, col, title="Plot", fout=None):
     """Plot a single dataframe column as a histogram
-    
+
     :param df_clust: dataframe to use
     :type df: pyspark.sql.DataFrame
     :param col: column to plot the histogram for
