@@ -40,7 +40,7 @@ def load_df(fname, pth, schema=None, header="true", limit=None, part=None, **kwa
     """
     if fname.endswith("parquet"):
         fformat = "parquet"
-    elif fname.endswith("csv"):
+    elif fname.endswith("csv") or fname.endswith("csv.gz"):
         fformat = "csv"
     else:
         raise ValueError(
