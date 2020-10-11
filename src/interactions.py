@@ -12,10 +12,52 @@ class Simulation:
 
     :param cluster: cluster data - position and velocity [broken into componenets], and mass
     :type cluster: pyspark.sql.DataFrame, with schema schemas.clust_input
-    :param dt: time step for the simulation
-    :type dt: float
+    :param integrator: Integration method to use
+    :type integrator: TODO
     :param ttarget: target time to reach when running the simulation
     :type ttarget: int
+    :param G: gravitational constant to use, defaults to 1
+    :type G: float, optional
+    :param t: timestamp of the current cluster data, defaults to 0
+    :type t: int, optional
+    """
+
+    def __init__(self, cluster, integrator, ttarget, G=1, t=0):
+        """Constructor"""
+        self.t = t
+        self.ttarget = ttarget
+
+        self.cluster = cluster
+
+        self.G = G
+
+        self.integrator = integrator
+
+    def run(self):
+        """
+        run the simulation with the chosen method until the target time is reached
+
+
+        :raises: ValueError if the target time is already reached
+        """
+        if self.t >= self.ttarget:
+            raise ValueError("Target time is already reached")
+
+        while (self.t < self.ttarget):
+            newSnapshot, timePassed = self.integrator.advance(self.cluster)
+            self.cluster = newSnapshot
+            self.cluster.localCheckpoint()
+            self.t += timePassed
+
+
+
+class Intergrator_Euler:
+    """
+    Bruteforce integration method that advances all particles
+    at a constant time step (dt)
+
+    :param dt: time step for the simulation
+    :type dt: float
     :param nparts: number of partitions to use for dataframes that will undergo cartesian multiplication with themselves
     :type nparts: int
     :param G: gravitational constant to use, defaults to 1
@@ -24,43 +66,34 @@ class Simulation:
     :type t: int, optional
     """
 
-    def __init__(self, cluster, dt, ttarget, nparts, G=1, t=0):
+    def __init__(self, dt, nparts, G=1):
         """Constructor"""
-        self.t = t
-        self.ttarget = ttarget
-        self.dt = dt
 
-        self.cluster = cluster
+        self.dt = dt
 
         self.G = G
 
         self.nparts = nparts
 
-        self.methods = {
-            "eul1": self.advance_euler,
-            "eul2": self.advance_euler2
-        }
-
-    def run(self, method):
+    def advance(self, df_clust):
         """
-        run the simulation with the chosen method until the target time is reached
+        Advance by a step
 
-        :param method: computation method to use
-        :type method: string, {eul1,eul2}
-
-        :raises: ValueError if the target time is already reached
-        :raises: ValueError if the target time cannot be evenly divided into dt-sized steps
+        :param insteps: number of steps to advance
+        :type insteps: int
+        :returns: the new positions and velocities of the particles of the cluster, and time passed
+        :rtype: tuple (pyspark.sql.DataFrame, with schema schemas.clust_input, float)
         """
-        if self.t >= self.ttarget:
-            raise ValueError("Target time is already reached")
 
-        nsteps = (self.ttarget - self.t) / self.dt
-        insteps = int(nsteps)
-        if nsteps != insteps:
-            raise ValueError("Number of steps should be an integer")
+        df_clust = df_clust.localCheckpoint().repartition(self.nparts, "id")
+        df_F = self.calc_F(df_clust).localCheckpoint()
+        df_v, df_r = self.step_v(df_clust, df_F), self.step_r(
+            df_clust, df_F)
 
-        #self.cluster = 
-        self.methods[method](insteps)
+        df_clust = df_r.join(df_v, "id").join(
+            df_clust.select("id", "m"), "id")
+
+        return (df_clust, self.dt)
 
     def calc_F(self, df_clust):
         """
@@ -84,7 +117,6 @@ class Simulation:
         """
 
         df_F_cartesian = self.calc_F_cartesian(df_clust)
-
 
         df_F = utils.df_agg_sum(df_F_cartesian, "id", "Fx", "Fy", "Fz")
         df_F = df_F.selectExpr("id",
@@ -189,64 +221,6 @@ class Simulation:
                                       "x", "y", "z")
 
         return df_r_t
-
-    def advance_euler(self, insteps):
-        """
-        Advance step by step (by dt) for the specified number of steps.
-        re-evaluate the force per unit of mass after each step for use in the next one
-
-        :param insteps: number of steps to advance
-        :type insteps: int
-        :returns: the new positions and velocities of the particles of the cluster
-        :rtype: pyspark.sql.DataFrame, with schema schemas.clust_input
-        """
-
-        for _ in range(insteps):
-            self.cluster = self.cluster.localCheckpoint().repartition(self.nparts, "id")
-            df_F = self.calc_F(self.cluster).localCheckpoint()
-            df_v, df_r = self.step_v(self.cluster, df_F), self.step_r(
-                self.cluster, df_F)
-
-            self.cluster = df_r.join(df_v, "id").join(self.cluster.select("id", "m"), "id")
-            self.t += self.dt
-
-        #return df_clust
-
-    def advance_euler2(self, insteps):
-        """
-        Advance step by step (by dt) for the specified number of steps.
-        impover Euler method where the average force over the interval dt is used
-
-        :param insteps: number of steps to advance
-        :type insteps: int
-        :returns: the new positions and velocities of the particles of the cluster
-        :rtype: pyspark.sql.DataFrame, with schema schemas.clust_input
-        """
-
-        raise NotImplementedError("revise algorithm")
-
-        df_F = self.calc_F(self.cluster).localCheckpoint()
-        for _ in range(insteps):
-            self.cluster = self.cluster.localCheckpoint()
-
-            df_r_provisional = self.step_r(self.cluster, df_F).join(
-                self.cluster.select("id", "m"), "id").repartition(self.nparts, "id")
-
-            df_F_prov = self.calc_F(df_r_provisional).localCheckpoint()
-
-            df_F = (utils.df_elementwise(
-                df_F, df_F_prov, "id", "+", "Fx", "Fy", "Fz")
-                .selectExpr("id",
-                            "`Fx` / 2 as `Fx`",
-                            "`Fy` / 2 as `Fy`",
-                            "`Fz` / 2 as `Fz`"))
-            df_F.localCheckpoint()
-
-            df_v, df_r = self.step_v(self.cluster, df_F), self.step_r(self.cluster, df_F)
-
-            self.cluster = df_r.join(df_v, "id").join(self.cluster.select("id", "m"), "id")
-            self.t += self.dt
-
 
 
 def calc_gforce_cartesian(df_clust, G=1):

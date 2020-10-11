@@ -37,8 +37,11 @@ args = parser.parse_args()
 df_t0 = utils.load_df("c_0000.csv", args.inputDir,
                       schema=schemas.clust_input, part="id", limit=args.limit)
 
+methods = {
+    "eul1": Intergrator_Euler(args.dt, args.nparts, args.G),
+}
 
-sim = Simulation(df_t0, args.dt, args.target, args.nparts, args.G)
+sim = Simulation(df_t0, methods[args.method], args.target, args.G)
 
 if args.log > 0:
     from log import ClusterLogDecorator
@@ -49,10 +52,10 @@ if args.log > 0:
         "clusterLogger", f"log-{utils.clean_str(sc.appName)}-{sc.applicationId}.csv",
         args.outputDir, "header", False, True, args.log, args.G)
 
-    sim.calc_F = clogger(sim.calc_F)
+    sim.integrator.calc_F = clogger(sim.integrator.calc_F)
     # get the final state as well, albeit without F
     sim.run = clogger(sim.run)
 
-sim.run(args.method)
+sim.run()
 
-utils.save_df(sim.cluster, f"c_{args.target:04d}_dt_{args.dt}", args.outputDir)
+utils.save_df(sim.cluster, f"c_{sim.t}_dt_{args.dt}", args.outputDir)
