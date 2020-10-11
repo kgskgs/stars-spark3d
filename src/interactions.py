@@ -50,11 +50,88 @@ class Simulation:
             self.t += timePassed
 
 
+class Integrator_Hermite:
+    def __init__(self, dt, nparts, G=1):
+        """Constructor"""
+
+        self.dt = dt
+
+        self.G = G
+
+        self.nparts = nparts
+
+        self.df_acc_jerk = None
+
+    def advance(self, df_clust):
+
+        if (not df_acc_jerk):
+            self.df_acc_jerk = self.get_acc_jerk()
+
+        df_complete = df_clust.join(self.df_acc_jerk, "id")
+
+        df_predict = self.predict_step(df_clust)
+
+        df_res = self.correct_step(df_complete, df_predict)
+
+    def predict_step(self, df):
+
+        # position
+        df = df.selectExpr("id", "ax", "ay", "az", "jx", "jy", "jz",
+                           f"`vx`*{self.dt} + `ax`*{self.dt}*{self.dt}/2"
+                           f" + `jx`*{self.dt}*{self.dt}*{self.dt}/6 as x",
+
+                           f"`vy`*{self.dt} + `ay`*{self.dt}*{self.dt}/2"
+                           f" + `jy`*{self.dt}*{self.dt}*{self.dt}/6 as y",
+
+                           f"`vz`*{self.dt} + `az`*{self.dt}*{self.dt}/2"
+                           f" + `jz`*{self.dt}*{self.dt}*{self.dt}/6 as z")
+        # velocity
+        df = df.selectExpr("id", "ax", "ay", "az", "jx", "jy", "jz",
+                           f"`ax`*{self.dt} + `jx`*{self.dt}*{self.dt}/2 as vx",
+                           f"`ay`*{self.dt} + `jy`*{self.dt}*{self.dt}/2 as vy",
+                           f"`az`*{self.dt} + `jz`*{self.dt}*{self.dt}/2 as vz")
+
+        return df
+
+    def correct_step(self, df_old, df_predict):
+
+        df = utils.df_join_rename(df_predict, df_old, "id")
+
+        # velocity
+        df_v_new = df.selectExpr("id",
+                                 f"`vx_other` + (ax_other + ax)*{self.dt}/2"
+                                 f" + (jx_other - jx)*{self.dt}*{self.dt}/12 as vx",
+
+                                 f"`vy_other` + (ay_other + ay)*{self.dt}/2"
+                                 f" + (jy_other - jy)*{self.dt}*{self.dt}/12 as vy",
+
+                                 f"`vz_other` + (az_other + az)*{self.dt}/2"
+                                 f" + (jz_other - jz)*{self.dt}*{self.dt}/12 as vz",
+                                 )
+
+        df = df.drop("vx", "vy", "vz").join(df_v_new, "id")
+
+        # position
+        df = df.selectExpr("id", "vx", "vy", "vz",
+                           "ax", "ay", "az", "jx", "jy", "jz",
+                           f"`x_other` + (vx_other + vx)*{self.dt}/2"
+                           f" + (ax_other - ax)*{self.dt}*{self.dt}/12",
+
+                           f"`y_other` + (vy_other + vy)*{self.dt}/2"
+                           f" + (ay_other - ay)*{self.dt}*{self.dt}/12",
+
+                           f"`z_other` + (vz_other + vz)*{self.dt}/2"
+                           f" + (az_other - az)*{self.dt}*{self.dt}/12"
+                           )
+
+    def get_acc_jerk(self, df):
+
 
 class Intergrator_Euler:
     """
     Bruteforce integration method that advances all particles
-    at a constant time step (dt)
+    at a constant time step (dt). Calculates effective force per unit mass
+    for each particle with O(n^2) complexity.
 
     :param dt: time step for the simulation
     :type dt: float
@@ -101,7 +178,7 @@ class Intergrator_Euler:
 
                  N    m_j*(r_i - r_j)
         F = -G * Σ   -----------------
-                i!=j  |r_i - r_j|^3
+                i!=j   |r_i - r_j|^3
 
         r - position
         m - mass

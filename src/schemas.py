@@ -12,7 +12,38 @@ clust_input = StructType([
     StructField('id', IntegerType(), False)
 ])
 
-"""SPLIT"""
+"""Hermite Integrator"""
+
+clust_input_acc_jerk = StructType([
+    StructField('x',  DoubleType(), False),
+    StructField('y',  DoubleType(), False),
+    StructField('z',  DoubleType(), False),
+    StructField('vx', DoubleType(), False),
+    StructField('vy', DoubleType(), False),
+    StructField('vz', DoubleType(), False),
+    StructField('ax', DoubleType(), False),
+    StructField('ay', DoubleType(), False),
+    StructField('az', DoubleType(), False),
+    StructField('jx', DoubleType(), False),
+    StructField('jy', DoubleType(), False),
+    StructField('jz', DoubleType(), False),
+    StructField('m',  DoubleType(), False),
+    StructField('id', IntegerType(), False)
+])
+
+id_acc_jerk = StructType([
+    StructField('ax', DoubleType(), False),
+    StructField('ay', DoubleType(), False),
+    StructField('az', DoubleType(), False),
+    StructField('jx', DoubleType(), False),
+    StructField('jy', DoubleType(), False),
+    StructField('jz', DoubleType(), False),
+    StructField('m',  DoubleType(), False),
+    StructField('id', IntegerType(), False)
+    ])
+
+
+"""Euler Integrator"""
 dist_gforce = StructType([
     StructField("dist",   DoubleType(), False),
     StructField("gforce", DoubleType(), False),

@@ -174,6 +174,21 @@ def df_elementwise(df, df_other, idCol, op, *cols, renameOutput=False):
     return df_j.selectExpr(idCol, *opCols)
 
 
+def df_join_rename(df, df_other, idCol):
+    """
+    join two dataframes with the same columns and rename the second ones
+
+    :param df: first dataframe to use
+    :type df: pyspark.sql.DataFrame
+    :param df_other: second dataframe to use
+    :type df_other: pyspark.sql.DataFrame
+    :param idCol: column containing the matching ids
+    :type idCol: str
+    """
+    renameCols = [f"`{col}` as `{col}_other`" for col in df_other.columns if col != idCol]
+    return df.join(df_other.selectExpr(idCol, *renameCols), idCol, "inner")
+
+
 class NpAccumulatorParam(AccumulatorParam):
     """spark acumulator param for a numpy array"""
 
@@ -325,7 +340,6 @@ def plot_cluster_scater2d(df_clust, axes=["x", "y"], title="Plot", fout=None):
     if fout is not None:
         pl.savefig(fout)
     pl.show()
-
 
 
 def plot_cluster_scater3d(df_clust, title="Plot", fout=None):
