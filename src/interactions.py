@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import utils
+from pyspark.sql import functions as F
 
 
 class Simulation:
@@ -77,13 +78,13 @@ class Integrator_Hermite:
 
         # position
         df = df.selectExpr("id", "ax", "ay", "az", "jx", "jy", "jz",
-                           f"`vx`*{self.dt} + `ax`*{self.dt}*{self.dt}/2"
+                           f"`vx`*{self.dt} + `ax`*{self.dt}*{self.dt}/2",
                            f" + `jx`*{self.dt}*{self.dt}*{self.dt}/6 as x",
 
-                           f"`vy`*{self.dt} + `ay`*{self.dt}*{self.dt}/2"
+                           f"`vy`*{self.dt} + `ay`*{self.dt}*{self.dt}/2",
                            f" + `jy`*{self.dt}*{self.dt}*{self.dt}/6 as y",
 
-                           f"`vz`*{self.dt} + `az`*{self.dt}*{self.dt}/2"
+                           f"`vz`*{self.dt} + `az`*{self.dt}*{self.dt}/2",
                            f" + `jz`*{self.dt}*{self.dt}*{self.dt}/6 as z")
         # velocity
         df = df.selectExpr("id", "ax", "ay", "az", "jx", "jy", "jz",
@@ -99,7 +100,7 @@ class Integrator_Hermite:
 
         # velocity
         df_v_new = df.selectExpr("id",
-                                 f"`vx_other` + (ax_other + ax)*{self.dt}/2"
+                                 f"`vx_other` + (ax_other + ax)*{self.dt}/2",
                                  f" + (jx_other - jx)*{self.dt}*{self.dt}/12 as vx",
 
                                  f"`vy_other` + (ay_other + ay)*{self.dt}/2"
@@ -125,6 +126,7 @@ class Integrator_Hermite:
                            )
 
     def get_acc_jerk(self, df):
+        pass
 
 
 class Intergrator_Euler:
@@ -298,6 +300,48 @@ class Intergrator_Euler:
                                       "x", "y", "z")
 
         return df_r_t
+
+
+class Intergrator_Euler_Sym(Intergrator_Euler):
+    def calc_F_cartesian(self, df_clust):
+        """
+        :param df_clust: cluster data - position, velocity, and mass
+        :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust_input
+        :returns: the forces acting between every two particles
+        :rtype: pyspark.sql.DataFrame, with schema schemas.F_cartesian
+        """
+        df_clust_cartesian = utils.df_x_cartesian(
+            df_clust, ffilter="id < id_other")
+
+        df_F_cartesian = df_clust_cartesian.selectExpr("id", "id_other", "m_other",
+                                                       "`x` - `x_other` as `diff(x)`",
+                                                       "`y` - `y_other` as `diff(y)`",
+                                                       "`z` - `z_other` as `diff(z)`"
+                                                       )
+        df_F_cartesian = df_F_cartesian.selectExpr("id", "id_other",
+                                                   "`diff(x)` * `m_other` as `num(x)`",
+                                                   "`diff(y)` * `m_other` as `num(y)`",
+                                                   "`diff(z)` * `m_other` as `num(z)`",
+                                                   "sqrt(`diff(x)` * `diff(x)` + `diff(y)`"
+                                                   "* `diff(y)` + `diff(z)` * `diff(z)`) as `denom`",
+                                                   )
+        df_F_cartesian = df_F_cartesian.selectExpr("id", "id_other",
+                                                   "`num(x)` / pow(`denom`, 3) as `Fx`",
+                                                   "`num(y)` / pow(`denom`, 3) as `Fy`",
+                                                   "`num(z)` / pow(`denom`, 3) as `Fz`",
+                                                   )
+
+        sumCols = ["Fx", "Fy", "Fz"]
+        oppositeSums = [(-F.col(c)).alias(c) for c in sumCols]
+        df_F_cartesian = df_F_cartesian.select(F.explode(F.array(
+            F.struct(F.col("id"), *sumCols),
+            F.struct(F.col("id_other").alias("id"), *oppositeSums)
+        )).alias("s")).select("s.*")
+
+        return df_F_cartesian
+
+
+
 
 
 def calc_gforce_cartesian(df_clust, G=1):

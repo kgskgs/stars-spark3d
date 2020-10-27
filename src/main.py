@@ -39,6 +39,7 @@ df_t0 = utils.load_df("c_0000.csv", args.inputDir,
 
 methods = {
     "eul1": Intergrator_Euler(args.dt, args.nparts, args.G),
+    "eul2": Intergrator_Euler_Sym(args.dt, args.nparts, args.G),
 }
 
 sim = Simulation(df_t0, methods[args.method], args.target, args.G)
