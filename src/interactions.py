@@ -62,17 +62,20 @@ class Integrator_Hermite:
         self.nparts = nparts
 
         self.df_acc_jerk = None
+        self.t_collision = None
+ 
 
     def advance(self, df_clust):
 
-        if (not df_acc_jerk):
+        if (not self.df_acc_jerk):
             self.df_acc_jerk = self.get_acc_jerk()
 
-        df_complete = df_clust.join(self.df_acc_jerk, "id")
+
+        df_clust_acc_jerk = df_clust.join(self.df_acc_jerk, "id")
 
         df_predict = self.predict_step(df_clust)
 
-        df_res = self.correct_step(df_complete, df_predict)
+        df_res = self.correct_step(df_clust_acc_jerk, df_predict)
 
     def predict_step(self, df):
 

@@ -26,8 +26,6 @@ parser.add_argument("-i", "--inputDir", help="input path",
                     default="../data/")
 parser.add_argument("-G", help="gravitational constant for the simulation",
                     default=scipy_G, type=float)
-parser.add_argument("--log", help="limit the number of input rows to read",
-                    default="0", choices=[0, 1, 2, 3, 4], type=int)
 parser.add_argument('--test', help="run test.py instead of simulation",
                     action='store_true')
 args = parser.parse_args()
@@ -43,19 +41,6 @@ methods = {
 }
 
 sim = Simulation(df_t0, methods[args.method], args.target, args.G)
-
-if args.log > 0:
-    from log import ClusterLogDecorator
-    from pyspark.context import SparkContext
-
-    sc = SparkContext.getOrCreate()
-    clogger = ClusterLogDecorator(
-        "clusterLogger", f"log-{utils.clean_str(sc.appName)}-{sc.applicationId}.csv",
-        args.outputDir, "header", False, True, args.log, args.G)
-
-    sim.integrator.calc_F = clogger(sim.integrator.calc_F)
-    # get the final state as well, albeit without F
-    sim.run = clogger(sim.run)
 
 sim.run()
 

@@ -315,7 +315,7 @@ def df_collectLimit(df, limit, *cols, sortCol=None):
 """plots"""
 
 
-def plot_cluster_scater2d(df_clust, axes=["x", "y"], title="Plot", fout=None):
+def plot_cluster_scater2d(df_clust, axes=["x", "y"], title="Plot", stack=False, fout=None):
     """draw a scatter plot of a cluster
 
     :param df_clust: dataframe containing the cluster
@@ -325,7 +325,9 @@ def plot_cluster_scater2d(df_clust, axes=["x", "y"], title="Plot", fout=None):
     :param fout: save the plot to a file if provided, defaults to None
     :type fout: str, optional
     :param axes: axes to plot
-    :type axes: list, optional    
+    :type axes: list, optional
+    :param stack: don't show/save the plot, for drawing continuously on the same plot
+    :type stack: bool, optional
     """
 
     coords = np.transpose(df_clust.select(*axes).collect())
@@ -335,11 +337,14 @@ def plot_cluster_scater2d(df_clust, axes=["x", "y"], title="Plot", fout=None):
 
     pl.xlabel(axes[0])
     pl.ylabel(axes[1])
+    pl.axes().set_aspect('equal')
 
     pl.title(title)
-    if fout is not None:
-        pl.savefig(fout)
-    pl.show()
+    if not stack:
+        if fout is not None:
+            pl.savefig(fout)
+        else:
+            pl.show()
 
 
 def plot_cluster_scater3d(df_clust, title="Plot", fout=None):
