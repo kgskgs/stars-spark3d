@@ -17,7 +17,7 @@ from pyspark3d.visualisation import scatter3d_mpl
 
 def load_df(fname, pth, schema=None, header="true", limit=None, part=None, **kwargs):
     """
-    wrapper for pyspark.sql.SparkSession.load - read dataframe from parquet or csv
+    Wrapper for pyspark.sql.SparkSession.load - read dataframe from parquet or csv
 
     :param fname: filename(s) - load accepts wildcards
     :type fname: str
@@ -62,11 +62,11 @@ def load_df(fname, pth, schema=None, header="true", limit=None, part=None, **kwa
 
 
 def save_df(df, fname, pth, fformat="parquet", compression="gzip", **kwargs):
-    """wrapper for pyspark.sql.DataFrame.save - save a dataframe
+    """Wrapper for pyspark.sql.DataFrame.save - save a dataframe
 
     :param df: dataframe to save
     :type df: pyspark.sql.DataFrame
-    :param fname: filename(s) - load accepts wildcards
+    :param fname: filename
     :type fname: str
     :param pth: path to the folder the file(s) is in
     :type pth: str
@@ -89,13 +89,13 @@ def save_df(df, fname, pth, fformat="parquet", compression="gzip", **kwargs):
 
 
 def df_agg_sum(df, aggCol, *sumCols):
-    """dataframe - aggregate by column and sum
+    """Dataframe - aggregate by column and sum
 
     groups all the rows that have the same value for aggCol,
     and sums their sumCols
     :param df: dataframe to use
     :type df: pyspark.sql.DataFrame
-    :param aggCol: column to aggrate on 
+    :param aggCol: column to aggrate on
     :type aggCol: str
     :param *sumCols: columns to sum
     :type *sumCols: str
@@ -108,8 +108,7 @@ def df_agg_sum(df, aggCol, *sumCols):
 
 
 def df_x_cartesian(df, ffilter=None):
-    """
-    get the cartesian product of a dataframe with itself
+    """Get the cartesian product of a dataframe with itself
 
     :param df: dataframe to use
     :type df: pyspark.sql.DataFrame
@@ -126,7 +125,7 @@ def df_x_cartesian(df, ffilter=None):
 
 
 def df_add_index(df, order_col):
-    """add an index column to a dataframe
+    """Add an index column to a dataframe
 
     :param df: dataframe to use
     :type df: pyspark.sql.DataFrame
@@ -140,9 +139,8 @@ def df_add_index(df, order_col):
 
 
 def df_elementwise(df, df_other, idCol, op, *cols, renameOutput=False):
-    """join two dataframes with the same schema by id,
-    and perform an elementwise operation on the
-    selected columns
+    """Join two dataframes with the same schema by id,
+    and perform an elementwise operation on the selected columns
 
     :param df: first dataframe to use
     :type df: pyspark.sql.DataFrame
@@ -175,8 +173,7 @@ def df_elementwise(df, df_other, idCol, op, *cols, renameOutput=False):
 
 
 def df_join_rename(df, df_other, idCol):
-    """
-    join two dataframes with the same columns and rename the second ones
+    """Join two dataframes with the same columns and rename the second ones
 
     :param df: first dataframe to use
     :type df: pyspark.sql.DataFrame
@@ -204,7 +201,7 @@ class NpAccumulatorParam(AccumulatorParam):
 
 
 def df_compare(df, df_other, idCol):
-    """comapre two dataframes with the same schema and ids
+    """Comapre two dataframes with the same schema and ids
     by taking the absolute difference of each row
 
     :param df: first dataframe to use
@@ -228,7 +225,7 @@ def df_compare(df, df_other, idCol):
 
 
 def simple_error(df, df_target, idCol):
-    """get the absolute differences between all elements
+    """Get the absolute differences between all elements
     of two dataframes with the same schema, and sum them
 
     note: since inner join is used
@@ -252,7 +249,7 @@ def simple_error(df, df_target, idCol):
 
 
 def mse(df, df_target, idCol, rmse=False):
-    """   get the mean squared error or root mean squared error
+    """Get the mean squared error or root mean squared error
     between two dataframes with the same schema
 
     :param df: first dataframe to use
@@ -287,8 +284,7 @@ def mse(df, df_target, idCol, rmse=False):
 
 
 def df_collectLimit(df, limit, *cols, sortCol=None):
-    """
-    Collect from a dataframe up to a limit
+    """Collect from a dataframe up to a limit
 
     :param df: dataframe to collect
     :type df: pyspark.sql.DataFrame
@@ -316,7 +312,7 @@ def df_collectLimit(df, limit, *cols, sortCol=None):
 
 
 def plot_cluster_scater2d(df_clust, axes=["x", "y"], title="Plot", stack=False, fout=None):
-    """draw a scatter plot of a cluster
+    """Draw a 2d scatter plot of a cluster
 
     :param df_clust: dataframe containing the cluster
     :type df_clust: pyspark.sql.DataFrame
@@ -348,7 +344,7 @@ def plot_cluster_scater2d(df_clust, axes=["x", "y"], title="Plot", stack=False, 
 
 
 def plot_cluster_scater3d(df_clust, title="Plot", fout=None):
-    """draw a scatter plot of a cluster
+    """Draw a 3d scatter plot of a cluster
 
     :param df_clust: dataframe containing the cluster
     :type df_clust: pyspark.sql.DataFrame
@@ -392,7 +388,7 @@ def plot_histogram(df, col, title="Plot", fout=None):
 
 
 def clean_str(string):
-    """clean a string from everything except word characters,
+    """Clean a string from everything except word characters,
     replace spaces with '_'
 
     :param string: string to clean
@@ -402,3 +398,26 @@ def clean_str(string):
     """
     string = re.sub(r"\s", "_", string.strip())
     return re.sub(r"[^\w]", "", string)
+
+
+class SaveOptions(dict):
+    """Configuration for the utils.save_df method that can be easily reused::
+
+        save_df(df, fname, **SaveOptions)
+
+    :param pth: path to the folder the file(s) is in
+    :type pth: str
+    :param **kwargs: additional arguments to pass to save
+    :type **kwargs: dict
+    :param fformat: format to save in, defaults to "parquet"
+    :type fformat: str, optional
+    :param compression: compression to use, defaults to "gzip"
+    :type compression: str, optional
+    """
+    __slots__ = ()
+    def __init__(self, pth, fformat="parquet", compression="gzip", **kwargs):
+
+        super(SaveOptions, self).__init__(**kwargs)
+        self["pth"] = pth
+        self["fformat"] = fformat
+        self["compression"] = compression

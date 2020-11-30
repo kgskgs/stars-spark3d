@@ -1,15 +1,14 @@
 #!/usr/bin/python3
 import utils
+import cluster
+import schemas
 from pyspark.sql import functions as F
+from pyspark.sql.session import SparkSession
 
 
 class Simulation:
-    """
-    set the simulation conditions
+    """Set the simulation conditions
 
-    currently available computation methods:
-    *eul1 - basic step method
-    *eul2 - version of eul1 where average force over the period dt is used
 
     :param cluster: cluster data - position and velocity [broken into componenets], and mass
     :type cluster: pyspark.sql.DataFrame, with schema schemas.clust_input
@@ -17,27 +16,36 @@ class Simulation:
     :type integrator: TODO
     :param ttarget: target time to reach when running the simulation
     :type ttarget: int
-    :param G: gravitational constant to use, defaults to 1
-    :type G: float, optional
+    :param save_params: parameters to pass to utils.save_df when saving output
+    :type save_params: utils.SaveOptions / dict
     :param t: timestamp of the current cluster data, defaults to 0
     :type t: int, optional
+    :param dt_out: time interval between cluster snapshots, not saved if omitted
+    :type dt_out: int, optional
+    :param dt_diag: time interval between energy outputs, not saved if omitted
+    :type dt_diag: int, optional
     """
 
-    def __init__(self, cluster, integrator, ttarget, G=1, t=0):
+    def __init__(self, cluster, integrator, ttarget, save_params, t=0, dt_out=None, dt_diag=None):
         """Constructor"""
+        self.cluster = cluster
         self.t = t
         self.ttarget = ttarget
 
-        self.cluster = cluster
-
-        self.G = G
-
         self.integrator = integrator
+        self.G = integrator.G
+
+        self.dt_out = dt_out
+        if dt_out:
+            self.next_out = t + dt_out
+        self.dt_diag = dt_diag
+        if dt_diag:
+            self.next_diag = t + dt_diag
+
+        self.save_params = save_params
 
     def run(self):
-        """
-        run the simulation with the chosen method until the target time is reached
-
+        """Run the simulation with the chosen method until the target time is reached
 
         :raises: ValueError if the target time is already reached
         """
@@ -49,6 +57,32 @@ class Simulation:
             self.cluster = newSnapshot
             self.cluster.localCheckpoint()
             self.t += timePassed
+
+            if self.dt_out and self.next_out <= self.t:
+                self.snapshot()
+                self.next_out += self.dt_out
+            if self.dt_diag and self.next_diag <= self.t:
+                self.diag()
+                self.next_diag += self.dt_diag
+
+    def snapshot(self):
+        """Save a snapshot of the cluster
+        """
+        print(utils.save_df(self.cluster, f"t{self.t}", **self.save_params))
+
+    def diag(self):
+        """Save diagnostic information about the cluster energy
+        """
+        T, U = cluster.calc_T(self.cluster, self.G), cluster.calc_U(self.cluster, self.G)
+        E = T + U
+        cm = cluster.calc_cm(self.cluster)
+
+        df_diag = SparkSession.builder.getOrCreate().createDataFrame(
+            [(self.t, cm['x'], cm['y'], cm['z'], T, U, E)],
+            schema=schemas.diag
+        )
+
+        print(utils.save_df(df_diag, f"diag_t{self.t}", **self.save_params))
 
 
 class Integrator_Hermite:
@@ -63,13 +97,11 @@ class Integrator_Hermite:
 
         self.df_acc_jerk = None
         self.t_collision = None
- 
 
     def advance(self, df_clust):
 
         if (not self.df_acc_jerk):
             self.df_acc_jerk = self.get_acc_jerk()
-
 
         df_clust_acc_jerk = df_clust.join(self.df_acc_jerk, "id")
 
@@ -133,8 +165,7 @@ class Integrator_Hermite:
 
 
 class Intergrator_Euler:
-    """
-    Bruteforce integration method that advances all particles
+    """First order integration method that advances all particles
     at a constant time step (dt). Calculates effective force per unit mass
     for each particle with O(n^2) complexity.
 
@@ -158,8 +189,7 @@ class Intergrator_Euler:
         self.nparts = nparts
 
     def advance(self, df_clust):
-        """
-        Advance by a step
+        """Advance by a step
 
         :param insteps: number of steps to advance
         :type insteps: int
@@ -178,12 +208,11 @@ class Intergrator_Euler:
         return (df_clust, self.dt)
 
     def calc_F(self, df_clust):
-        """
-        calculate the force per unit mass acting on every particle
+        """Calculate the force per unit mass acting on every particle::
 
-                 N    m_j*(r_i - r_j)
-        F = -G * Σ   -----------------
-                i!=j   |r_i - r_j|^3
+                     N    m_j*(r_i - r_j)
+            F = -G * Σ   -----------------
+                    i!=j   |r_i - r_j|^3
 
         r - position
         m - mass
@@ -209,8 +238,7 @@ class Intergrator_Euler:
         return df_F
 
     def calc_F_cartesian(self, df_clust):
-        """
-        The pairwise calculations to be used for calculating F
+        """The pairwise calculations to be used for calculating F
         can be used to check which particle(s) contribute the most
         to the effective force acting on a single one
 
@@ -243,9 +271,9 @@ class Intergrator_Euler:
         return df_F_cartesian
 
     def step_v(self, df_clust, df_F):
-        """
-        calculate v for a single timestep t, dt = t - t_0
-        v_i(t) = F_i*∆t + v_i(t0)
+        """Calculate v for a single timestep t, dt = t - t_0::
+
+            v_i(t) = F_i*∆t + v_i(t0)
 
         [Aarseth, S. (2003). Gravitational N-Body Simulations: Tools and Algorithms
         eq. (1.19)]
@@ -269,9 +297,9 @@ class Intergrator_Euler:
         return df_v_t
 
     def step_r(self, df_clust, df_F):
-        """
-        calculate r for a single timestep t, dt = t - t_0
-        r_i(t) = 1/2*F_i*∆t^2 + v_i(t0)*∆t + r_i(t0)
+        """Calculate r for a single timestep t, dt = t - t_0::
+
+            r_i(t) = 1/2*F_i*∆t^2 + v_i(t0)*∆t + r_i(t0)
 
         [Aarseth, S. (2003). Gravitational N-Body Simulations: Tools and Algorithms
         eq. (1.19)]
@@ -344,17 +372,13 @@ class Intergrator_Euler_Sym(Intergrator_Euler):
         return df_F_cartesian
 
 
-
-
-
 def calc_gforce_cartesian(df_clust, G=1):
-    """
-    calculate the distance and gravity force between
-    every two particles in the cluster
+    """Calculate the distance and gravity force between
+    every two particles in the cluster::
 
-        G * m_1 * m_2
-    F = -------------
-            d^2
+            G * m_1 * m_2
+        F = -------------
+                d^2
 
     m - mass
     d - distance between the centers

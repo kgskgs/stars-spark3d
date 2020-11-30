@@ -110,12 +110,23 @@ v_id = StructType([
 
 """Test"""
 
-
 E_test_res = StructType([
     StructField('name',       StringType(), False),
     StructField("E",          DoubleType(), False),
     StructField("targetE",    DoubleType(), False),
     StructField("difference", DoubleType(), False),
-    StructField("tolerance",   DoubleType(), False),
+    StructField("tolerance",  DoubleType(), False),
     StructField("success",    BooleanType(), False),
+])
+
+"""Diagnostic"""
+
+diag = StructType([
+    StructField('t',   DoubleType(), False),
+    StructField('cmx', DoubleType(), False),
+    StructField('cmy', DoubleType(), False),
+    StructField('cmz', DoubleType(), False),
+    StructField("T",   DoubleType(), False),
+    StructField("U",   DoubleType(), False),
+    StructField("E",   DoubleType(), False)
 ])
