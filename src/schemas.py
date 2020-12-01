@@ -2,14 +2,14 @@
 from pyspark.sql.types import *
 
 clust_input = StructType([
+    StructField('id', IntegerType(), False),
     StructField('x',  DoubleType(), False),
     StructField('y',  DoubleType(), False),
     StructField('z',  DoubleType(), False),
     StructField('vx', DoubleType(), False),
     StructField('vy', DoubleType(), False),
     StructField('vz', DoubleType(), False),
-    StructField('m',  DoubleType(), False),
-    StructField('id', IntegerType(), False)
+    StructField('m',  DoubleType(), False)
 ])
 
 """Hermite Integrator"""

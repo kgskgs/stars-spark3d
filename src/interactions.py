@@ -55,7 +55,7 @@ class Simulation:
         while (self.t < self.ttarget):
             newSnapshot, timePassed = self.integrator.advance(self.cluster)
             self.cluster = newSnapshot
-            self.cluster.localCheckpoint()
+            # self.cluster.localCheckpoint()
             self.t += timePassed
 
             if self.dt_out and self.next_out <= self.t:
@@ -285,14 +285,13 @@ class Intergrator_Euler:
         :returns: the new velocity of each particle
         :rtype: pyspark.sql.DataFrame, with schema schemas.v_id
         """
-        df_F = df_F.selectExpr("id",
-                               f"`Fx`*{self.dt} as `vx`",
-                               f"`Fy`*{self.dt} as `vy`",
-                               f"`Fz`*{self.dt} as `vz`"
-                               )
 
-        df_v_t = utils.df_elementwise(df_F, df_clust, "id", "+",
-                                      "vx", "vy", "vz")
+        df_v_t = df_F.join(df_clust, "id").selectExpr(
+            "id",
+            f"`Fx`*{self.dt} + `vx` as `vx`",
+            f"`Fy`*{self.dt} + `vy` as `vy`",
+            f"`Fz`*{self.dt} + `vz` as `vz`"
+        )
 
         return df_v_t
 
@@ -312,64 +311,50 @@ class Intergrator_Euler:
         :rtype: pyspark.sql.DataFrame, with schema schemas.r_id
         """
 
-        df_F = df_F.selectExpr("id",
-                               f"`Fx`*{self.dt}*{self.dt}/2 as `x`",
-                               f"`Fy`*{self.dt}*{self.dt}/2 as `y`",
-                               f"`Fz`*{self.dt}*{self.dt}/2 as `z`"
-                               )
-
-        df_v0 = df_clust.selectExpr("id",
-                                    f"`vx` * {self.dt} as `x`",
-                                    f"`vy` * {self.dt} as `y`",
-                                    f"`vz` * {self.dt} as `z`"
-                                    )
-
-        df_r_t = utils.df_elementwise(df_clust, df_v0, "id", "+",
-                                      "x", "y", "z")
-
-        df_r_t = utils.df_elementwise(df_r_t, df_F, "id", "+",
-                                      "x", "y", "z")
+        df_r_t = df_F.join(df_clust, "id").selectExpr(
+            "id",
+            f"`Fx`*{self.dt}*{self.dt}/2 + `vx` * {self.dt} + `x` as `x`",
+            f"`Fy`*{self.dt}*{self.dt}/2 + `vy` * {self.dt} + `y` as `y`",
+            f"`Fz`*{self.dt}*{self.dt}/2 + `vz` * {self.dt} + `z` as `z`"
+        )
 
         return df_r_t
 
 
-class Intergrator_Euler_Sym(Intergrator_Euler):
-    def calc_F_cartesian(self, df_clust):
+class Intergrator_Euler2(Intergrator_Euler):
+    """Improved Euler integrator (2nd order)
+    """
+
+    def advance(self, df_clust):
+        """Advance by a step; 
+
+        :param insteps: number of steps to advance
+        :type insteps: int
+        :returns: the new positions and velocities of the particles of the cluster, and time passed
+        :rtype: tuple (pyspark.sql.DataFrame, with schema schemas.clust_input, float)
         """
-        :param df_clust: cluster data - position, velocity, and mass
-        :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust_input
-        :returns: the forces acting between every two particles
-        :rtype: pyspark.sql.DataFrame, with schema schemas.F_cartesian
-        """
-        df_clust_cartesian = utils.df_x_cartesian(
-            df_clust, ffilter="id < id_other")
 
-        df_F_cartesian = df_clust_cartesian.selectExpr("id", "id_other", "m_other",
-                                                       "`x` - `x_other` as `diff(x)`",
-                                                       "`y` - `y_other` as `diff(y)`",
-                                                       "`z` - `z_other` as `diff(z)`"
-                                                       )
-        df_F_cartesian = df_F_cartesian.selectExpr("id", "id_other",
-                                                   "`diff(x)` * `m_other` as `num(x)`",
-                                                   "`diff(y)` * `m_other` as `num(y)`",
-                                                   "`diff(z)` * `m_other` as `num(z)`",
-                                                   "sqrt(`diff(x)` * `diff(x)` + `diff(y)`"
-                                                   "* `diff(y)` + `diff(z)` * `diff(z)`) as `denom`",
-                                                   )
-        df_F_cartesian = df_F_cartesian.selectExpr("id", "id_other",
-                                                   "`num(x)` / pow(`denom`, 3) as `Fx`",
-                                                   "`num(y)` / pow(`denom`, 3) as `Fy`",
-                                                   "`num(z)` / pow(`denom`, 3) as `Fz`",
-                                                   )
+        df_clust = df_clust.localCheckpoint().repartition(self.nparts, "id")
+        df_F1 = self.calc_F(df_clust)
+        df_r1 = self.step_r(df_clust, df_F1)
 
-        sumCols = ["Fx", "Fy", "Fz"]
-        oppositeSums = [(-F.col(c)).alias(c) for c in sumCols]
-        df_F_cartesian = df_F_cartesian.select(F.explode(F.array(
-            F.struct(F.col("id"), *sumCols),
-            F.struct(F.col("id_other").alias("id"), *oppositeSums)
-        )).alias("s")).select("s.*")
+        df_F2 = self.calc_F(df_r1.join(df_clust.select("id", "m"), "id"))
 
-        return df_F_cartesian
+        df_F = utils.df_elementwise(df_F1, df_F2, "id", "+", "Fx", "Fy", "Fz")
+        df_F = df_F.selectExpr("id",
+                               "`Fx` / 2 as `Fx`",
+                               "`Fy` / 2 as `Fy`",
+                               "`Fz` / 2 as `Fz`"
+                               )
+        df_F.localCheckpoint()
+
+        df_v, df_r = self.step_v(df_clust, df_F), self.step_r(
+            df_clust, df_F)
+
+        df_clust = df_r.join(df_v, "id").join(
+            df_clust.select("id", "m"), "id")
+
+        return (df_clust, self.dt)
 
 
 def calc_gforce_cartesian(df_clust, G=1):

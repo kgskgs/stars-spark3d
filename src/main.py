@@ -13,7 +13,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("dt", help="delta t for calculating steps",
                     type=float)
 parser.add_argument("target", help="target time to reach in the simulation",
-                    type=int)
+                    type=float)
 parser.add_argument("method", help="method to use for running the simulation",
                     choices=['eul1', 'eul2'])
 
@@ -43,18 +43,9 @@ args = parser.parse_args()
 """/arguments"""
 
 
-"""preapare simulation"""
+"""load data"""
 df_t0 = utils.load_df(args.inputFile, args.inputDir,
                       schema=schemas.clust_input, part="id", limit=args.limit)
-
-methods = {
-    "eul1": Intergrator_Euler(args.dt, args.nparts, args.G),
-    "eul2": Intergrator_Euler_Sym(args.dt, args.nparts, args.G),
-}
-
-sopts = utils.SaveOptions(args.outputDir, fformat="csv", compression="None", header="true")
-sim = Simulation(df_t0, methods[args.method], args.target, sopts,
-                 dt_out=args.dtout, dt_diag=args.dtdiag)
 
 
 """adjust spark settings"""
@@ -63,6 +54,19 @@ spark.conf.set("spark.sql.caseSensitive", "true")
 if df_t0.count() < 4:
     spark.conf.set("spark.default.parallelism", "1")
     spark.conf.set("spark.sql.shuffle.partitions", "1")
+
+
+"""setup simulation"""
+methods = {
+    "eul1": Intergrator_Euler(args.dt, args.nparts, args.G),
+    "eul2": Intergrator_Euler2(args.dt, args.nparts, args.G),
+}
+
+sopts = utils.SaveOptions(args.outputDir, fformat="csv", compression="None", header="true")
+sim = Simulation(df_t0, methods[args.method], args.target, sopts,
+                 dt_out=args.dtout, dt_diag=args.dtdiag)
+
+
 
 """run"""
 sim.run()
