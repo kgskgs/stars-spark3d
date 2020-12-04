@@ -23,7 +23,7 @@ parser.add_argument("--dtdiag", help="time interval between cdiagnosting output"
                     default=None, type=float)
 
 parser.add_argument("-p", "--nparts", help="number of spark partitions for cartesian operations",
-                    default=16, type=int)
+                    default=4, type=int)
 parser.add_argument("-l", "--limit", help="limit the number of input rows to read",
                     nargs="?", const=1000, type=int)
 
@@ -45,15 +45,15 @@ args = parser.parse_args()
 
 """load data"""
 df_t0 = utils.load_df(args.inputFile, args.inputDir,
-                      schema=schemas.clust_input, part="id", limit=args.limit)
+                      schema=schemas.clust, part="id", limit=args.limit)
 
 
 """adjust spark settings"""
 spark = SparkSession.builder.getOrCreate()
 spark.conf.set("spark.sql.caseSensitive", "true")
 if df_t0.count() < 4:
-    spark.conf.set("spark.default.parallelism", "1")
-    spark.conf.set("spark.sql.shuffle.partitions", "1")
+    spark.conf.set("spark.default.parallelism", "2")
+    spark.conf.set("spark.sql.shuffle.partitions", "2")
 
 
 """setup simulation"""

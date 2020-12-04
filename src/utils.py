@@ -311,19 +311,21 @@ def df_collectLimit(df, limit, *cols, sortCol=None):
 """plots"""
 
 
-def plot_cluster_scater2d(df_clust, axes=["x", "y"], title="Plot", stack=False, fout=None):
+def plot_cluster_scater2d(df_clust, axes=["x", "y"], title="Plot", stack=False, fout=None, eqAspect=True):
     """Draw a 2d scatter plot of a cluster
 
     :param df_clust: dataframe containing the cluster
     :type df_clust: pyspark.sql.DataFrame
-    :param title: title of the plot, defaults to "Plot"
-    :type title: str, optional
-    :param fout: save the plot to a file if provided, defaults to None
-    :type fout: str, optional
     :param axes: axes to plot
     :type axes: list, optional
+    :param title: title of the plot, defaults to "Plot"
+    :type title: str, optional
     :param stack: don't show/save the plot, for drawing continuously on the same plot
     :type stack: bool, optional
+    :param fout: save the plot to a file if provided, defaults to None
+    :type fout: str, optional
+    :param eqAspect: should it use set_aspect('equal') 
+    :type eqAspect: bool, optional
     """
 
     coords = np.transpose(df_clust.select(*axes).collect())
@@ -333,7 +335,8 @@ def plot_cluster_scater2d(df_clust, axes=["x", "y"], title="Plot", stack=False, 
 
     pl.xlabel(axes[0])
     pl.ylabel(axes[1])
-    pl.axes().set_aspect('equal')
+    if eqAspect:
+        pl.axes().set_aspect('equal')
 
     pl.title(title)
     if not stack:

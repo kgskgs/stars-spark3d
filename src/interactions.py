@@ -2,8 +2,8 @@
 import utils
 import cluster
 import schemas
-from pyspark.sql import functions as F
 from pyspark.sql.session import SparkSession
+from pyspark.sql.functions import lit
 
 
 class Simulation:
@@ -44,6 +44,8 @@ class Simulation:
 
         self.save_params = save_params
 
+        self.snapshot()
+
     def run(self):
         """Run the simulation with the chosen method until the target time is reached
 
@@ -55,7 +57,6 @@ class Simulation:
         while (self.t < self.ttarget):
             newSnapshot, timePassed = self.integrator.advance(self.cluster)
             self.cluster = newSnapshot
-            # self.cluster.localCheckpoint()
             self.t += timePassed
 
             if self.dt_out and self.next_out <= self.t:
@@ -65,10 +66,14 @@ class Simulation:
                 self.diag()
                 self.next_diag += self.dt_diag
 
-    def snapshot(self):
+    def snapshot(self, add_t=False):
         """Save a snapshot of the cluster
         """
-        print(utils.save_df(self.cluster, f"t{self.t}", **self.save_params))
+        if add_t:
+            utils.save_df(self.cluster.withColumn("t", lit(self.t)),
+                          f"t{self.t}", **self.save_params)
+        else:
+            utils.save_df(self.cluster, f"t{self.t}", **self.save_params)
 
     def diag(self):
         """Save diagnostic information about the cluster energy
@@ -82,7 +87,7 @@ class Simulation:
             schema=schemas.diag
         )
 
-        print(utils.save_df(df_diag, f"diag_t{self.t}", **self.save_params))
+        utils.save_df(df_diag, f"diag_t{self.t}", **self.save_params)
 
 
 class Integrator_Hermite:
@@ -169,9 +174,11 @@ class Intergrator_Euler:
     at a constant time step (dt). Calculates effective force per unit mass
     for each particle with O(n^2) complexity.
 
+    Suggested nparts: # cores
+
     :param dt: time step for the simulation
     :type dt: float
-    :param nparts: number of partitions to use for dataframes that will undergo cartesian multiplication with themselves
+    :param nparts: number of partitions to use for dataframes that will undergo shuffle joins
     :type nparts: int
     :param G: gravitational constant to use, defaults to 1
     :type G: float, optional
@@ -191,8 +198,8 @@ class Intergrator_Euler:
     def advance(self, df_clust):
         """Advance by a step
 
-        :param insteps: number of steps to advance
-        :type insteps: int
+        :param df_clust: cluster data - position, velocity, and mass
+        :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust_input
         :returns: the new positions and velocities of the particles of the cluster, and time passed
         :rtype: tuple (pyspark.sql.DataFrame, with schema schemas.clust_input, float)
         """
@@ -202,8 +209,9 @@ class Intergrator_Euler:
         df_v, df_r = self.step_v(df_clust, df_F), self.step_r(
             df_clust, df_F)
 
-        df_clust = df_r.join(df_v, "id").join(
-            df_clust.select("id", "m"), "id")
+        df_clust = df_r.join(df_v, "id")
+        # bring order back to schema
+        df_clust = df_clust.select('id', 'x', 'y', 'z', 'vx', 'vy', 'vz', 'm')
 
         return (df_clust, self.dt)
 
@@ -315,18 +323,24 @@ class Intergrator_Euler:
             "id",
             f"`Fx`*{self.dt}*{self.dt}/2 + `vx` * {self.dt} + `x` as `x`",
             f"`Fy`*{self.dt}*{self.dt}/2 + `vy` * {self.dt} + `y` as `y`",
-            f"`Fz`*{self.dt}*{self.dt}/2 + `vz` * {self.dt} + `z` as `z`"
+            f"`Fz`*{self.dt}*{self.dt}/2 + `vz` * {self.dt} + `z` as `z`",
+            "m"
         )
 
         return df_r_t
 
 
 class Intergrator_Euler2(Intergrator_Euler):
-    """Improved Euler integrator (2nd order)
+    """Improved Euler integrator - 2nd order. After calculating F(1) for the current position,
+    it calculates provisional coordiantes r(1) (this is like the original so far). 
+    It then uses r(1) to calculate the force F(2), and uses the average of F(1) and F(2)
+    in the final calculation of coordinates and velocities for the step
+
+    Suggested nparts: # cores / 2
     """
 
     def advance(self, df_clust):
-        """Advance by a step; 
+        """Advance by a step;
 
         :param insteps: number of steps to advance
         :type insteps: int
@@ -335,10 +349,11 @@ class Intergrator_Euler2(Intergrator_Euler):
         """
 
         df_clust = df_clust.localCheckpoint().repartition(self.nparts, "id")
-        df_F1 = self.calc_F(df_clust)
+        df_F1 = self.calc_F(df_clust).localCheckpoint().repartition(self.nparts, "id")
         df_r1 = self.step_r(df_clust, df_F1)
+        df_r1 = df_r1.localCheckpoint().repartition(self.nparts, "id")
 
-        df_F2 = self.calc_F(df_r1.join(df_clust.select("id", "m"), "id"))
+        df_F2 = self.calc_F(df_r1)
 
         df_F = utils.df_elementwise(df_F1, df_F2, "id", "+", "Fx", "Fy", "Fz")
         df_F = df_F.selectExpr("id",

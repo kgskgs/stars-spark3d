@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 from pyspark.sql.types import *
 
-clust_input = StructType([
+clust = StructType([
     StructField('id', IntegerType(), False),
     StructField('x',  DoubleType(), False),
     StructField('y',  DoubleType(), False),
@@ -12,9 +12,22 @@ clust_input = StructType([
     StructField('m',  DoubleType(), False)
 ])
 
+clust_t = StructType([
+    StructField('id', IntegerType(), False),
+    StructField('x',  DoubleType(), False),
+    StructField('y',  DoubleType(), False),
+    StructField('z',  DoubleType(), False),
+    StructField('vx', DoubleType(), False),
+    StructField('vy', DoubleType(), False),
+    StructField('vz', DoubleType(), False),
+    StructField('m',  DoubleType(), False),
+    StructField('t',  DoubleType(), False)
+])
+
+
 """Hermite Integrator"""
 
-clust_input_acc_jerk = StructType([
+clust_acc_jerk = StructType([
     StructField('x',  DoubleType(), False),
     StructField('y',  DoubleType(), False),
     StructField('z',  DoubleType(), False),
