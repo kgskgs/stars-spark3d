@@ -94,6 +94,8 @@ class Integrator_Hermite:
     def __init__(self, dt, nparts, G=1):
         """Constructor"""
 
+        raise NotImplementedError()
+
         self.dt = dt
 
         self.G = G
