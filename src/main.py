@@ -17,6 +17,9 @@ parser.add_argument("target", help="target time to reach in the simulation",
 parser.add_argument("method", help="method to use for running the simulation",
                     choices=['eul1', 'eul2'])
 
+parser.add_argument("-n", help="number input particles (for tuning)",
+                    default=64000, type=int)
+
 parser.add_argument("--dtout", help="time interval between cluster snapshots",
                     default=None, type=float)
 parser.add_argument("--dtdiag", help="time interval between cdiagnosting output",
@@ -44,16 +47,19 @@ args = parser.parse_args()
 
 
 """load data"""
-df_t0 = utils.load_df(args.inputFile, args.inputDir,
-                      schema=schemas.clust, part="id", limit=args.limit)
 
 
 """adjust spark settings"""
 spark = SparkSession.builder.getOrCreate()
 spark.conf.set("spark.sql.caseSensitive", "true")
-if df_t0.count() < 4:
-    spark.conf.set("spark.default.parallelism", "2")
-    spark.conf.set("spark.sql.shuffle.partitions", "2")
+if args.n < 8:
+    spark.conf.set("spark.default.parallelism", "1")
+    spark.conf.set("spark.sql.shuffle.partitions", "1")
+    df_t0 = utils.load_df(args.inputFile, args.inputDir,
+                          schema=schemas.clust, part=1, limit=args.limit)
+else:
+    df_t0 = utils.load_df(args.inputFile, args.inputDir,
+                          schema=schemas.clust, part="id", limit=args.limit)
 
 
 """setup simulation"""
@@ -65,7 +71,6 @@ methods = {
 sopts = utils.SaveOptions(args.outputDir, fformat="csv", compression="None", header="true")
 sim = Simulation(df_t0, methods[args.method], args.target, sopts,
                  dt_out=args.dtout, dt_diag=args.dtdiag)
-
 
 
 """run"""

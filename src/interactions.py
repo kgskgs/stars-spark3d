@@ -44,6 +44,8 @@ class Simulation:
 
         self.save_params = save_params
 
+        self.spark = SparkSession.builder.getOrCreate()
+
         self.snapshot()
 
     def run(self):
@@ -66,6 +68,7 @@ class Simulation:
                 self.diag()
                 self.next_diag += self.dt_diag
 
+
     def snapshot(self, add_t=False):
         """Save a snapshot of the cluster
         """
@@ -82,7 +85,7 @@ class Simulation:
         E = T + U
         cm = cluster.calc_cm(self.cluster)
 
-        df_diag = SparkSession.builder.getOrCreate().createDataFrame(
+        df_diag = self.spark.createDataFrame(
             [(self.t, cm['x'], cm['y'], cm['z'], T, U, E)],
             schema=schemas.diag
         )
@@ -206,8 +209,10 @@ class Intergrator_Euler:
         :rtype: tuple (pyspark.sql.DataFrame, with schema schemas.clust_input, float)
         """
 
-        df_clust = df_clust.localCheckpoint().repartition(self.nparts, "id")
-        df_F = self.calc_F(df_clust).localCheckpoint()
+        df_clust = df_clust.repartition(self.nparts, "id")
+        df_clust = df_clust.localCheckpoint()
+        df_F = self.calc_F(df_clust)
+        df_F = df_F.localCheckpoint()
         df_v, df_r = self.step_v(df_clust, df_F), self.step_r(
             df_clust, df_F)
 
@@ -334,7 +339,7 @@ class Intergrator_Euler:
 
 class Intergrator_Euler2(Intergrator_Euler):
     """Improved Euler integrator - 2nd order. After calculating F(1) for the current position,
-    it calculates provisional coordiantes r(1) (this is like the original so far). 
+    it calculates provisional coordiantes r(1) (this is like the original so far).
     It then uses r(1) to calculate the force F(2), and uses the average of F(1) and F(2)
     in the final calculation of coordinates and velocities for the step
 
@@ -350,10 +355,14 @@ class Intergrator_Euler2(Intergrator_Euler):
         :rtype: tuple (pyspark.sql.DataFrame, with schema schemas.clust_input, float)
         """
 
-        df_clust = df_clust.localCheckpoint().repartition(self.nparts, "id")
-        df_F1 = self.calc_F(df_clust).localCheckpoint().repartition(self.nparts, "id")
-        df_r1 = self.step_r(df_clust, df_F1)
-        df_r1 = df_r1.localCheckpoint().repartition(self.nparts, "id")
+        df_clust = df_clust.repartition(self.nparts, "id")
+        df_clust = df_clust.localCheckpoint()
+
+        df_F1 = self.calc_F(df_clust).repartition(self.nparts, "id")
+        df_F1 = df_F1.localCheckpoint()
+
+        df_r1 = self.step_r(df_clust, df_F1).repartition(self.nparts, "id")
+        df_r1 = df_r1.localCheckpoint()
 
         df_F2 = self.calc_F(df_r1)
 
@@ -363,7 +372,7 @@ class Intergrator_Euler2(Intergrator_Euler):
                                "`Fy` / 2 as `Fy`",
                                "`Fz` / 2 as `Fz`"
                                )
-        df_F.localCheckpoint()
+        df_F = df_F.localCheckpoint()
 
         df_v, df_r = self.step_v(df_clust, df_F), self.step_r(
             df_clust, df_F)
