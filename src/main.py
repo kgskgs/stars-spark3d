@@ -32,16 +32,13 @@ parser.add_argument("-l", "--limit", help="limit the number of input rows to rea
 
 parser.add_argument("-o", "--outputDir", help="output path",
                     default="../output/")
-parser.add_argument("-i", "--inputDir", help="input path",
+parser.add_argument("-i", "--input", help="input",
                     default="../data/")
-parser.add_argument("-f", "--inputFile", help="input filename",
-                    default="c_0000.csv")
+
 
 parser.add_argument("-G", help="gravitational constant for the simulation",
                     default=scipy_G, type=float)
 
-parser.add_argument('--test', help="run test.py instead of simulation",
-                    action='store_true')
 args = parser.parse_args()
 """/arguments"""
 
@@ -55,10 +52,10 @@ spark.conf.set("spark.sql.caseSensitive", "true")
 if args.n < 8:
     spark.conf.set("spark.default.parallelism", "1")
     spark.conf.set("spark.sql.shuffle.partitions", "1")
-    df_t0 = utils.load_df(args.inputFile, args.inputDir,
+    df_t0 = utils.load_df(args.input,
                           schema=schemas.clust, part=1, limit=args.limit)
 else:
-    df_t0 = utils.load_df(args.inputFile, args.inputDir,
+    df_t0 = utils.load_df(args.input,
                           schema=schemas.clust, part="id", limit=args.limit)
 
 
@@ -68,7 +65,7 @@ methods = {
     "eul2": Intergrator_Euler2(args.dt, args.nparts, args.G),
 }
 
-sopts = utils.SaveOptions(args.outputDir, fformat="csv", compression="None", header="true")
+sopts = utils.SaveOptions(args.outputDir, fformat="parquet", compression="gzip", header="true")
 sim = Simulation(df_t0, methods[args.method], args.target, sopts,
                  dt_out=args.dtout, dt_diag=args.dtdiag)
 

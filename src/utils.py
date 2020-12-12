@@ -15,16 +15,13 @@ from pyspark3d.visualisation import scatter3d_mpl
 """spark"""
 
 
-def load_df(fname, pth, schema=None, header="true", limit=None, part=None, **kwargs):
+def load_df(floc, schema=None, header="true", limit=None, part=None, **kwargs):
     """
     Wrapper for pyspark.sql.SparkSession.load - read dataframe from parquet or csv
 
-    :param fname: filename(s) - load accepts wildcards
-    :type fname: str
-    :param pth: path to the folder the file(s) is in
-    :type pth: str
-    :param **kwargs: additional arguments to pass to load
-    :type **kwargs: dict
+    :param floc: path to the file(s) - load accepts wildcards
+    :type floc: str
+
     :param schema: schema to use for the datframe, defaults to None
     :type schema: pyspark.sql.types.StructType, optional
     :param header: does the input data have a header, defaults to "true"
@@ -34,13 +31,15 @@ def load_df(fname, pth, schema=None, header="true", limit=None, part=None, **kwa
     :param part: if set repartitions the datafarame by this parameter (pyspark.sql.DataFrame.repartition), defaults to None
     :type part: *str - repartition with the default number of partitions by this column name
                 *int - repartition into this number number of partitions, optional
+    :param **kwargs: additional arguments to pass to load
+    :type **kwargs: dict
     :returns: the resulting dataframe
     :rtype: pyspark.sql.DataFrame
-    :raises: ValueError if the file (fname) extension is not 'csv' or 'parquet'
+    :raises: ValueError if the file (floc) extension is not 'csv' or 'parquet'
     """
-    if fname.endswith("parquet"):
+    if floc.endswith("parquet"):
         fformat = "parquet"
-    elif fname.endswith("csv") or fname.endswith("csv.gz"):
+    elif floc.endswith("csv") or floc.endswith("csv.gz"):
         fformat = "csv"
     else:
         raise ValueError(
@@ -48,8 +47,6 @@ def load_df(fname, pth, schema=None, header="true", limit=None, part=None, **kwa
             " [parquet, csv] in the filename")
 
     spark = SparkSession.builder.getOrCreate()
-
-    floc = os.path.join(pth, fname)
 
     df = spark.read.load(floc, format=fformat,
                          header=header, schema=schema, **kwargs)

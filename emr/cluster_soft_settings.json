@@ -33,21 +33,26 @@
       "properties":{
          "spark.executor.memory":"5812M",
          "spark.driver.memory":"5812M",
-         "spark.yarn.scheduler.reporterThread.maxFailures":"2",
+         "spark.yarn.scheduler.reporterThread.maxFailures":"1",
          "spark.driver.cores":"2",
          "spark.executor.heartbeatInterval":"60s",
          "spark.network.timeout":"800s",
          "spark.executor.cores":"2",
          "spark.memory.storageFraction":"0.30",
-         "spark.sql.shuffle.partitions":"64",
+         "spark.sql.shuffle.partitions":"8",
          "spark.default.parallelism":"64",
          "spark.serializer":"org.apache.spark.serializer.KryoSerializer",
          "spark.executor.memoryOverhead":"646M",
          "spark.memory.fraction":"0.80",
-         "spark.executor.extraJavaOptions":"-XX:+UseG1GC -XX:+UnlockDiagnosticVMOptions -XX:+G1SummarizeConcMark -XX:InitiatingHeapOccupancyPercent=35 -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:OnOutOfMemoryError='kill -9 %p'",
+         "spark.executor.extraJavaOptions":"-XX:+UseG1GC -XX:+UnlockDiagnosticVMOptions -XX:InitiatingHeapOccupancyPercent=35 -XX:OnOutOfMemoryError='kill -9 %p'",
          "spark.executor.instances":"17",
          "spark.dynamicAllocation.enabled":"false",
-         "spark.driver.extraJavaOptions":"-XX:+UseG1GC -XX:+UnlockDiagnosticVMOptions -XX:+G1SummarizeConcMark -XX:InitiatingHeapOccupancyPercent=35 -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:OnOutOfMemoryError='kill -9 %p'"
+         "spark.driver.extraJavaOptions":"-XX:+UseG1GC -XX:+UnlockDiagnosticVMOptions -XX:InitiatingHeapOccupancyPercent=35 -XX:OnOutOfMemoryError='kill -9 %p'",
+         "spark.cleaner.periodicGC.interval":"10min",
+         "spark.cleaner.referenceTracking.blocking":"false",
+         "spark.cleaner.referenceTracking.cleanCheckpoints":"true",
+         "spark.sql.adaptive.enabled":"true",
+         "spark.sql.execution.reuseSubquery":"true"
       },
       "configurations":[
          

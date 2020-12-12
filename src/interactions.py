@@ -61,13 +61,14 @@ class Simulation:
             self.cluster = newSnapshot
             self.t += timePassed
 
+            self.cluster = self.cluster.localCheckpoint()
+
             if self.dt_out and self.next_out <= self.t:
                 self.snapshot()
                 self.next_out += self.dt_out
             if self.dt_diag and self.next_diag <= self.t:
                 self.diag()
                 self.next_diag += self.dt_diag
-
 
     def snapshot(self, add_t=False):
         """Save a snapshot of the cluster
@@ -81,6 +82,7 @@ class Simulation:
     def diag(self):
         """Save diagnostic information about the cluster energy
         """
+
         T, U = cluster.calc_T(self.cluster, self.G), cluster.calc_U(self.cluster, self.G)
         E = T + U
         cm = cluster.calc_cm(self.cluster)
@@ -209,8 +211,8 @@ class Intergrator_Euler:
         :rtype: tuple (pyspark.sql.DataFrame, with schema schemas.clust_input, float)
         """
 
-        df_clust = df_clust.repartition(self.nparts, "id")
-        df_clust = df_clust.localCheckpoint()
+        #df_clust = df_clust.repartition(self.nparts, "id")
+        #df_clust = df_clust.localCheckpoint()
         df_F = self.calc_F(df_clust)
         df_F = df_F.localCheckpoint()
         df_v, df_r = self.step_v(df_clust, df_F), self.step_r(
@@ -355,16 +357,17 @@ class Intergrator_Euler2(Intergrator_Euler):
         :rtype: tuple (pyspark.sql.DataFrame, with schema schemas.clust_input, float)
         """
 
-        df_clust = df_clust.repartition(self.nparts, "id")
+        # df_clust = df_clust.repartition(self.nparts, "id")
         df_clust = df_clust.localCheckpoint()
 
-        df_F1 = self.calc_F(df_clust).repartition(self.nparts, "id")
+        df_F1 = self.calc_F(df_clust)  # .repartition(self.nparts, "id")
         df_F1 = df_F1.localCheckpoint()
 
-        df_r1 = self.step_r(df_clust, df_F1).repartition(self.nparts, "id")
+        df_r1 = self.step_r(df_clust, df_F1)  # .repartition(self.nparts, "id")
         df_r1 = df_r1.localCheckpoint()
 
         df_F2 = self.calc_F(df_r1)
+        df_F2 = df_F2.localCheckpoint()
 
         df_F = utils.df_elementwise(df_F1, df_F2, "id", "+", "Fx", "Fy", "Fz")
         df_F = df_F.selectExpr("id",
@@ -377,8 +380,9 @@ class Intergrator_Euler2(Intergrator_Euler):
         df_v, df_r = self.step_v(df_clust, df_F), self.step_r(
             df_clust, df_F)
 
-        df_clust = df_r.join(df_v, "id").join(
-            df_clust.select("id", "m"), "id")
+        df_clust = df_r.join(df_v, "id")
+        # bring order back to schema
+        df_clust = df_clust.select('id', 'x', 'y', 'z', 'vx', 'vy', 'vz', 'm')
 
         return (df_clust, self.dt)
 
