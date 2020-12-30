@@ -65,7 +65,7 @@ methods = {
     "eul2": Intergrator_Euler2(args.dt, args.nparts, args.G),
 }
 
-sopts = utils.SaveOptions(args.outputDir, fformat="parquet", compression="gzip", header="true")
+sopts = utils.SaveOptions(args.outputDir, fformat="csv", compression="none", header="true")
 sim = Simulation(df_t0, methods[args.method], args.target, sopts,
                  dt_out=args.dtout, dt_diag=args.dtdiag)
 

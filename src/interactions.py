@@ -72,9 +72,12 @@ class Simulation:
 
     def snapshot(self, add_t=False):
         """Save a snapshot of the cluster
+
+        :param add_t: if true add timestamp to each particle on output
+        :type add_t: bool
         """
         if add_t:
-            utils.save_df(self.cluster.withColumn("t", lit(self.t)),
+            utils.save_df(self.cluster.withColumn("t", lit(float(self.t))),
                           f"t{self.t}", **self.save_params)
         else:
             utils.save_df(self.cluster, f"t{self.t}", **self.save_params)
