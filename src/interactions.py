@@ -70,7 +70,7 @@ class Simulation:
                 self.diag()
                 self.next_diag += self.dt_diag
 
-    def snapshot(self, add_t=False):
+    def snapshot(self, add_t=True):
         """Save a snapshot of the cluster
 
         :param add_t: if true add timestamp to each particle on output
@@ -96,87 +96,6 @@ class Simulation:
         )
 
         utils.save_df(df_diag, f"diag_t{self.t}", **self.save_params)
-
-
-class Integrator_Hermite:
-    def __init__(self, dt, nparts, G=1):
-        """Constructor"""
-
-        raise NotImplementedError()
-
-        self.dt = dt
-
-        self.G = G
-
-        self.nparts = nparts
-
-        self.df_acc_jerk = None
-        self.t_collision = None
-
-    def advance(self, df_clust):
-
-        if (not self.df_acc_jerk):
-            self.df_acc_jerk = self.get_acc_jerk()
-
-        df_clust_acc_jerk = df_clust.join(self.df_acc_jerk, "id")
-
-        df_predict = self.predict_step(df_clust)
-
-        df_res = self.correct_step(df_clust_acc_jerk, df_predict)
-
-    def predict_step(self, df):
-
-        # position
-        df = df.selectExpr("id", "ax", "ay", "az", "jx", "jy", "jz",
-                           f"`vx`*{self.dt} + `ax`*{self.dt}*{self.dt}/2",
-                           f" + `jx`*{self.dt}*{self.dt}*{self.dt}/6 as x",
-
-                           f"`vy`*{self.dt} + `ay`*{self.dt}*{self.dt}/2",
-                           f" + `jy`*{self.dt}*{self.dt}*{self.dt}/6 as y",
-
-                           f"`vz`*{self.dt} + `az`*{self.dt}*{self.dt}/2",
-                           f" + `jz`*{self.dt}*{self.dt}*{self.dt}/6 as z")
-        # velocity
-        df = df.selectExpr("id", "ax", "ay", "az", "jx", "jy", "jz",
-                           f"`ax`*{self.dt} + `jx`*{self.dt}*{self.dt}/2 as vx",
-                           f"`ay`*{self.dt} + `jy`*{self.dt}*{self.dt}/2 as vy",
-                           f"`az`*{self.dt} + `jz`*{self.dt}*{self.dt}/2 as vz")
-
-        return df
-
-    def correct_step(self, df_old, df_predict):
-
-        df = utils.df_join_rename(df_predict, df_old, "id")
-
-        # velocity
-        df_v_new = df.selectExpr("id",
-                                 f"`vx_other` + (ax_other + ax)*{self.dt}/2",
-                                 f" + (jx_other - jx)*{self.dt}*{self.dt}/12 as vx",
-
-                                 f"`vy_other` + (ay_other + ay)*{self.dt}/2"
-                                 f" + (jy_other - jy)*{self.dt}*{self.dt}/12 as vy",
-
-                                 f"`vz_other` + (az_other + az)*{self.dt}/2"
-                                 f" + (jz_other - jz)*{self.dt}*{self.dt}/12 as vz",
-                                 )
-
-        df = df.drop("vx", "vy", "vz").join(df_v_new, "id")
-
-        # position
-        df = df.selectExpr("id", "vx", "vy", "vz",
-                           "ax", "ay", "az", "jx", "jy", "jz",
-                           f"`x_other` + (vx_other + vx)*{self.dt}/2"
-                           f" + (ax_other - ax)*{self.dt}*{self.dt}/12",
-
-                           f"`y_other` + (vy_other + vy)*{self.dt}/2"
-                           f" + (ay_other - ay)*{self.dt}*{self.dt}/12",
-
-                           f"`z_other` + (vz_other + vz)*{self.dt}/2"
-                           f" + (az_other - az)*{self.dt}*{self.dt}/12"
-                           )
-
-    def get_acc_jerk(self, df):
-        pass
 
 
 class Intergrator_Euler:
@@ -388,6 +307,134 @@ class Intergrator_Euler2(Intergrator_Euler):
         df_clust = df_clust.select('id', 'x', 'y', 'z', 'vx', 'vy', 'vz', 'm')
 
         return (df_clust, self.dt)
+
+
+
+class Integrator_Hermite:
+    def __init__(self, dt, nparts, G=1):
+        """Constructor"""
+
+        raise NotImplementedError()
+
+        self.dt = dt
+
+        self.G = G
+
+        self.nparts = nparts
+
+        self.df_acc_jerk = None
+        self.t_collision = None
+
+    def advance(self, df_clust):
+
+        if (not self.df_acc_jerk):
+            self.df_acc_jerk = self.get_acc_jerk()
+
+        df_clust_acc_jerk = df_clust.join(self.df_acc_jerk, "id")
+
+        df_predict = self.predict_step(df_clust)
+
+        df_res = self.correct_step(df_clust_acc_jerk, df_predict)
+
+    def predict_step(self, df):
+
+        # position
+        df = df.selectExpr("id", "ax", "ay", "az", "jx", "jy", "jz",
+                           f"`vx`*{self.dt} + `ax`*{self.dt}*{self.dt}/2",
+                           f" + `jx`*{self.dt}*{self.dt}*{self.dt}/6 as x",
+
+                           f"`vy`*{self.dt} + `ay`*{self.dt}*{self.dt}/2",
+                           f" + `jy`*{self.dt}*{self.dt}*{self.dt}/6 as y",
+
+                           f"`vz`*{self.dt} + `az`*{self.dt}*{self.dt}/2",
+                           f" + `jz`*{self.dt}*{self.dt}*{self.dt}/6 as z")
+        # velocity
+        df = df.selectExpr("id", "ax", "ay", "az", "jx", "jy", "jz",
+                           f"`ax`*{self.dt} + `jx`*{self.dt}*{self.dt}/2 as vx",
+                           f"`ay`*{self.dt} + `jy`*{self.dt}*{self.dt}/2 as vy",
+                           f"`az`*{self.dt} + `jz`*{self.dt}*{self.dt}/2 as vz")
+
+        return df
+
+    def correct_step(self, df_old, df_predict):
+
+        df = utils.df_join_rename(df_predict, df_old, "id")
+
+        # velocity
+        df_v_new = df.selectExpr("id",
+                                 f"`vx_other` + (ax_other + ax)*{self.dt}/2",
+                                 f" + (jx_other - jx)*{self.dt}*{self.dt}/12 as vx",
+
+                                 f"`vy_other` + (ay_other + ay)*{self.dt}/2"
+                                 f" + (jy_other - jy)*{self.dt}*{self.dt}/12 as vy",
+
+                                 f"`vz_other` + (az_other + az)*{self.dt}/2"
+                                 f" + (jz_other - jz)*{self.dt}*{self.dt}/12 as vz",
+                                 )
+
+        df = df.drop("vx", "vy", "vz").join(df_v_new, "id")
+
+        # position
+        df = df.selectExpr("id", "vx", "vy", "vz",
+                           "ax", "ay", "az", "jx", "jy", "jz",
+                           f"`x_other` + (vx_other + vx)*{self.dt}/2"
+                           f" + (ax_other - ax)*{self.dt}*{self.dt}/12",
+
+                           f"`y_other` + (vy_other + vy)*{self.dt}/2"
+                           f" + (ay_other - ay)*{self.dt}*{self.dt}/12",
+
+                           f"`z_other` + (vz_other + vz)*{self.dt}/2"
+                           f" + (az_other - az)*{self.dt}*{self.dt}/12"
+                           )
+
+    def get_acc_jerk(self, df):
+        pass
+
+
+
+class Integrator_RungeKutta4(Intergrator_Euler):
+
+    def advance(self, df_clust):
+        
+        F1 = self.calc_F(df_clust)
+        F1 = F1.localCheckpoint()
+        F2 = self.calc_F(self.step(df_clust, F1, 0.5))
+        F2 = F2.localCheckpoint()
+        F3 = self.calc_F(self.step(df_clust, F2, 0.5))
+        F3.localCheckpoint()
+        F4 = self.calc_F(self.step(df_clust, F3))
+
+        F = utils.df_elementwise(F1,
+                utils.df_elementwise(F2.selectExpr("id", "`Fx` * 2 as `Fx`", "`Fy` * 2 as `Fy`", "`Fz` * 2 as `Fz`"),
+                    utils.df_elementwise(F3.selectExpr("id", "`Fx` * 2 as `Fx`", "`Fy` * 2 as `Fy`", "`Fz` * 2 as `Fz`"),
+                        F4, 
+                    "id", "+", "Fx", "Fy", "Fz"),
+                "id", "+", "Fx", "Fy", "Fz"),
+            "id", "+", "Fx", "Fy", "Fz")
+
+        df_clust = self.step(df_clust, F, "1/6")
+
+        return (df_clust, self.dt)
+
+
+
+    def step(self, df_clust, df_F, mod=1):
+
+        df_clust = df_F.join(df_clust, "id").selectExpr(
+            "id",
+            f"(`Fx`*{self.dt}*{self.dt}/2 + `vx` * {self.dt}) * {mod} + `x` as `x`",
+            f"(`Fy`*{self.dt}*{self.dt}/2 + `vy` * {self.dt}) * {mod} + `y` as `y`",
+            f"(`Fz`*{self.dt}*{self.dt}/2 + `vz` * {self.dt}) * {mod} + `z` as `z`",
+            f"(`Fx`*{self.dt}) * {mod} + `vx` as `vx`",
+            f"(`Fy`*{self.dt}) * {mod} + `vy` as `vy`",
+            f"(`Fz`*{self.dt}) * {mod} + `vz` as `vz`",
+            "m"
+        )
+
+        return df_clust
+
+
+
 
 
 def calc_gforce_cartesian(df_clust, G=1):

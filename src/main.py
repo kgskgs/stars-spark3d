@@ -15,7 +15,7 @@ parser.add_argument("dt", help="delta t for calculating steps",
 parser.add_argument("target", help="target time to reach in the simulation",
                     type=float)
 parser.add_argument("method", help="method to use for running the simulation",
-                    choices=['eul1', 'eul2'])
+                    choices=['eul1', 'eul2', 'rk4'])
 
 parser.add_argument("-n", help="number input particles (for tuning)",
                     default=64000, type=int)
@@ -63,6 +63,7 @@ else:
 methods = {
     "eul1": Intergrator_Euler(args.dt, args.nparts, args.G),
     "eul2": Intergrator_Euler2(args.dt, args.nparts, args.G),
+    "rk4": Integrator_RungeKutta4(args.dt, args.nparts, args.G),
 }
 
 sopts = utils.SaveOptions(args.outputDir, fformat="csv", compression="none", header="true")
