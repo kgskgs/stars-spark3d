@@ -1,6 +1,6 @@
 An N-body problem in physics aims to predict the movement of [stellar] particles that interact gravitationally. Such a simulation has an analytical solution only for two particles, and is computationally expensive as every two particles interact. 
 
-This repo aims to implement some computation methods for conducting an n-body simulation, following Sverre Aarseth's book [Gravitational N-Body Simulations Tools and Algorithms](https://www.cambridge.org/core/books/gravitational-nbody-simulations/A5D1D86EA634C9D354B7C82C029D6933#fndtn-information) with Apache Spark (pySpark more concretely). 
+This repo aims to implement some computation methods for conducting an n-body simulation with Apache Spark (pySpark more concretely). 
 
 ## Data
 
