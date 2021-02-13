@@ -5,3 +5,4 @@ gravity_test.cmd
 *.patch
 *.diff
 internaltest.py
+**/doc/

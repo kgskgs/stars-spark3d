@@ -5,6 +5,7 @@ from interactions import *
 import utils
 import schemas
 from pyspark.sql.session import SparkSession
+import os
 
 """arguments"""
 import argparse
@@ -66,7 +67,8 @@ methods = {
     "rk4": Integrator_RungeKutta4(args.dt, args.nparts, args.G),
 }
 
-sopts = utils.SaveOptions(args.outputDir, fformat="csv", compression="none", header="true")
+sopts = utils.SaveOptions(os.path.join(args.outputDir,utils.clean_str(spark.conf.get("spark.app.name"))), 
+    fformat="csv", compression="none", header="true")
 sim = Simulation(df_t0, methods[args.method], args.target, sopts,
                  dt_out=args.dtout, dt_diag=args.dtdiag)
 
