@@ -338,7 +338,7 @@ class Integrator_RungeKutta4(Intergrator_Euler):
         F = utils.df_elementwise(F1,
                 utils.df_elementwise(F2.selectExpr("id", "`Fx` * 2 as `Fx`", "`Fy` * 2 as `Fy`", "`Fz` * 2 as `Fz`"),
                     utils.df_elementwise(F3.selectExpr("id", "`Fx` * 2 as `Fx`", "`Fy` * 2 as `Fy`", "`Fz` * 2 as `Fz`"),
-                        F4,
+                                            F4,
                     "id", "+", "Fx", "Fy", "Fz"),
                 "id", "+", "Fx", "Fy", "Fz"),
             "id", "+", "Fx", "Fy", "Fz")

@@ -67,8 +67,10 @@ methods = {
     "rk4": Integrator_RungeKutta4(args.dt, args.nparts, args.G),
 }
 
-sopts = utils.SaveOptions(os.path.join(args.outputDir,utils.clean_str(spark.conf.get("spark.app.name"))), 
-    fformat="csv", compression="none", header="true")
+nameStr = utils.clean_str(spark.conf.get("spark.app.name")) + "-" + spark.conf.get("spark.app.id")
+sopts = utils.SaveOptions(os.path.join(args.outputDir, nameStr), fformat="csv",
+                          compression="none", header="true")
+
 sim = Simulation(df_t0, methods[args.method], args.target, sopts,
                  dt_out=args.dtout, dt_diag=args.dtdiag)
 
