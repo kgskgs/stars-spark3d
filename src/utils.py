@@ -2,15 +2,14 @@
 import numpy as np
 import os
 from matplotlib import pyplot as pl
+from mpl_toolkits.mplot3d import Axes3D
 import re
 
-from pyspark.context import SparkContext
 from pyspark.sql.session import SparkSession
 from pyspark.sql.functions import row_number
 from pyspark.sql import Window
 from pyspark import AccumulatorParam
 
-from pyspark3d.visualisation import scatter3d_mpl
 
 """spark"""
 
@@ -76,7 +75,6 @@ def save_df(df, fname, pth, fformat="parquet", compression="gzip", **kwargs):
     :returns: path to the saved dataframe
     :rtype: str
     """
-    sc = SparkContext.getOrCreate()
     sloc = os.path.join(pth, fname)
     df.write.format(fformat).save(sloc, compression=compression, **kwargs)
 
@@ -306,8 +304,8 @@ def df_collectLimit(df, limit, *cols, sortCol=None):
 """plots"""
 
 
-def plot_cluster_scater2d(df_clust, axes=["x", "y"], title="Plot", stack=False, fout=None, eqAspect=True):
-    """Draw a 2d scatter plot of a cluster
+def plot_cluster_scatter(df_clust, axes=["x", "y"], title="Plot", stack=False, fout=None, eqAspect=True):
+    """Plot a scatter of the data provided, 2d or 3d based on the axes paramater
 
     :param df_clust: dataframe containing the cluster
     :type df_clust: pyspark.sql.DataFrame
@@ -319,19 +317,24 @@ def plot_cluster_scater2d(df_clust, axes=["x", "y"], title="Plot", stack=False, 
     :type stack: bool, optional
     :param fout: save the plot to a file if provided, defaults to None
     :type fout: str, optional
-    :param eqAspect: should it use set_aspect('equal') 
+    :param eqAspect: should it use set_aspect('equal')
     :type eqAspect: bool, optional
     """
 
     coords = np.transpose(df_clust.select(*axes).collect())
 
-    pl.scatter(coords[0], coords[1], s=1,
-               label="Data set", **{"facecolors": "blue", "marker": "."})
+    if len(coords) == 3:
+        fig = pl.figure()
+        ax = Axes3D(fig)
+        ax.scatter(*coords, s=1)
+    else:
+        pl.scatter(*coords, s=1,
+                   label="Data set", **{"facecolors": "blue", "marker": "."})
 
-    pl.xlabel(axes[0])
-    pl.ylabel(axes[1])
-    if eqAspect:
-        pl.axes().set_aspect('equal')
+        pl.xlabel(axes[0])
+        pl.ylabel(axes[1])
+        if eqAspect:
+            pl.axes().set_aspect('equal')
 
     pl.title(title)
     if not stack:
@@ -339,27 +342,6 @@ def plot_cluster_scater2d(df_clust, axes=["x", "y"], title="Plot", stack=False, 
             pl.savefig(fout)
         else:
             pl.show()
-
-
-def plot_cluster_scater3d(df_clust, title="Plot", fout=None):
-    """Draw a 3d scatter plot of a cluster
-
-    :param df_clust: dataframe containing the cluster
-    :type df_clust: pyspark.sql.DataFrame
-    :param title: title of the plot, defaults to "Plot"
-    :type title: str, optional
-    :param fout: save the plot to a file if provided, defaults to None
-    :type fout: str, optional
-    """
-    coords = np.transpose(df_clust.select("x", "y", "z").collect())
-
-    scatter3d_mpl(coords[0], coords[1], coords[2],
-                  label="Data set", **{"facecolors": "blue", "marker": "."})
-
-    pl.title(title)
-    if fout is not None:
-        pl.savefig(fout)
-    pl.show()
 
 
 def plot_histogram(df, col, title="Plot", fout=None):
