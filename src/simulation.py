@@ -20,13 +20,17 @@ class Simulation:
     :type save_params: utils.SaveOptions / dict
     :param t: timestamp of the current cluster data, defaults to 0
     :type t: int, optional
+    :param add_t_snap: if true add timestamp to each particle on output, defaults to False
+    :type add_t_snap: bool, optional
     :param dt_out: time interval between cluster snapshots, not saved if omitted
     :type dt_out: int, optional
     :param dt_diag: time interval between energy outputs, not saved if omitted
     :type dt_diag: int, optional
+    :param saveDiag: if true save diagnostic to disk instead of printing to standard output, defaults to False
+    :type saveDiag: bool, optional
     """
 
-    def __init__(self, cluster, integrator, ttarget, save_params, t=0, dt_out=None, dt_diag=None):
+    def __init__(self, cluster, integrator, ttarget, save_params, t=0, add_t_snap=False, dt_out=None, dt_diag=None, saveDiag=False):
         """Constructor"""
         self.cluster = cluster
         self.t = t
@@ -38,15 +42,20 @@ class Simulation:
         self.dt_out = dt_out
         if dt_out:
             self.next_out = t + dt_out
-        self.dt_diag = dt_diag
-        if dt_diag:
-            self.next_diag = t + dt_diag
 
         self.save_params = save_params
+        self.add_t_snap = add_t_snap
+        self.saveDiag = saveDiag
 
         self.spark = SparkSession.builder.getOrCreate()
 
-        self.snapshot()
+        self.E_initial = None
+
+        self.dt_diag = dt_diag
+        if dt_diag:
+            self.next_diag = t + dt_diag
+            #run diagnostic to get initial information about the cluster
+            self.diag()
 
     def run(self):
         """Run the simulation with the chosen method until the target time is reached
@@ -70,13 +79,10 @@ class Simulation:
                 self.diag()
                 self.next_diag += self.dt_diag
 
-    def snapshot(self, add_t=True):
+    def snapshot(self):
         """Save a snapshot of the cluster
-
-        :param add_t: if true add timestamp to each particle on output
-        :type add_t: bool
         """
-        if add_t:
+        if self.add_t_snap:
             utils.save_df(self.cluster.withColumn("t", lit(float(self.t))),
                           f"t{self.t}", **self.save_params)
         else:
@@ -88,11 +94,22 @@ class Simulation:
 
         T, U = cluster.calc_T(self.cluster, self.G), cluster.calc_U(self.cluster, self.G)
         E = T + U
-        cm = cluster.calc_cm(self.cluster)
 
-        df_diag = self.spark.createDataFrame(
-            [(self.t, cm['x'], cm['y'], cm['z'], T, U, E)],
-            schema=schemas.diag
-        )
+        if not self.E_initial:
+            self.E_initial = E
 
-        utils.save_df(df_diag, f"diag_t{self.t}", **self.save_params)
+        dE = (E - self.E_initial) / self.E_initial
+        diagInfo = (self.t, E, dE)
+
+        if self.saveDiag:
+            # necessary to match the spark schema
+            diagInfo = [float(x) for x in diagInfo]
+            df_diag = self.spark.createDataFrame(
+                [diagInfo],
+                schema=schemas.diag
+            )
+
+            utils.save_df(df_diag, f"diag_t{self.t}", **self.save_params)
+        else:
+            print("{: >30} {: >30} {: >30}".format(*("t", "E", "dE")))
+            print("{: >30} {: >30} {: >30}".format(*diagInfo))

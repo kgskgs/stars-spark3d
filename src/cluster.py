@@ -6,9 +6,7 @@ import utils
 
 
 def calc_cm(df_clust):
-    """Calcuate the center of mass of the cluster
-    in our dataset all the masses are equal, so
-    it is equal to the mean of the coordinates::
+    """Calcuate the center of mass of the cluster::
 
                  N
         R = 1/M *Σ m_i*r_i

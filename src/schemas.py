@@ -136,10 +136,6 @@ E_test_res = StructType([
 
 diag = StructType([
     StructField('t',   DoubleType(), False),
-    StructField('cmx', DoubleType(), False),
-    StructField('cmy', DoubleType(), False),
-    StructField('cmz', DoubleType(), False),
-    StructField("T",   DoubleType(), False),
-    StructField("U",   DoubleType(), False),
-    StructField("E",   DoubleType(), False)
+    StructField("E",   DoubleType(), False),
+    StructField("dE",  DoubleType(), False),
 ])
