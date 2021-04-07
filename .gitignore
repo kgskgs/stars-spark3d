@@ -6,3 +6,4 @@ gravity_test.cmd
 *.diff
 internaltest.py
 **/doc/
+src.zip
