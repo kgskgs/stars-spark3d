@@ -117,18 +117,7 @@ def df_x_cartesian(df, ffilter=None):
     return df_cart
 
 
-def df_add_index(df, order_col):
-    """Add an index column to a dataframe
 
-    :param df: dataframe to use
-    :type df: pyspark.sql.DataFrame
-    :param order_col: column to order by
-    :type order_col: str
-    :returns: resulting dataframe
-    :rtype: pyspark.sql.DataFrame
-    """
-    return df.withColumn('index',
-                         row_number().over(Window.orderBy(order_col)) - 1)
 
 
 def df_elementwise(df, df_other, idCol, op, *cols, renameOutput=False):

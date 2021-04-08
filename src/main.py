@@ -36,7 +36,7 @@ parser.add_argument("-o", "--outputDir", help="output path",
 parser.add_argument("-f", help="format to save output in",
                     choices=['parquet', 'csv'], default="parquet")
 parser.add_argument("--comp", help="format to save output in",
-                    type=str, default=None)
+                    type=str, default="none")
 
 
 parser.add_argument("-G", help="gravitational constant for the simulation",
