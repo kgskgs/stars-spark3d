@@ -24,38 +24,6 @@ clust_t = StructType([
     StructField('t',  DoubleType(), False)
 ])
 
-
-"""Hermite Integrator"""
-
-clust_acc_jerk = StructType([
-    StructField('x',  DoubleType(), False),
-    StructField('y',  DoubleType(), False),
-    StructField('z',  DoubleType(), False),
-    StructField('vx', DoubleType(), False),
-    StructField('vy', DoubleType(), False),
-    StructField('vz', DoubleType(), False),
-    StructField('ax', DoubleType(), False),
-    StructField('ay', DoubleType(), False),
-    StructField('az', DoubleType(), False),
-    StructField('jx', DoubleType(), False),
-    StructField('jy', DoubleType(), False),
-    StructField('jz', DoubleType(), False),
-    StructField('m',  DoubleType(), False),
-    StructField('id', IntegerType(), False)
-])
-
-id_acc_jerk = StructType([
-    StructField('ax', DoubleType(), False),
-    StructField('ay', DoubleType(), False),
-    StructField('az', DoubleType(), False),
-    StructField('jx', DoubleType(), False),
-    StructField('jy', DoubleType(), False),
-    StructField('jz', DoubleType(), False),
-    StructField('m',  DoubleType(), False),
-    StructField('id', IntegerType(), False)
-    ])
-
-
 """Euler Integrator"""
 dist_gforce = StructType([
     StructField("dist",   DoubleType(), False),
@@ -128,8 +96,6 @@ E_test_res = StructType([
     StructField("E",          DoubleType(), False),
     StructField("targetE",    DoubleType(), False),
     StructField("difference", DoubleType(), False),
-    StructField("tolerance",  DoubleType(), False),
-    StructField("success",    BooleanType(), False),
 ])
 
 """Diagnostic"""

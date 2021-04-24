@@ -17,18 +17,10 @@ class IntergratorEuler(IntegratorBase):
         :rtype: tuple (pyspark.sql.DataFrame, with schema schemas.clust_input, float)
         """
 
-        # df_clust = df_clust.localCheckpoint()
+        df_clust = df_clust.cache()
         df_F = self.calc_F(df_clust)
 
-        #df_F.sort("id").show(truncate=False)
-
-        df_F = df_F.localCheckpoint()
-        df_v, df_r = self.step_v(df_clust, df_F), self.step_r(
-            df_clust, df_F)
-
-        df_clust = df_r.join(df_v, "id")
-        # bring order back to schema
-        df_clust = df_clust.select('id', 'x', 'y', 'z', 'vx', 'vy', 'vz', 'm')
+        df_clust = self.step(df_clust, df_F)
 
         return (df_clust, self.dt)
 
@@ -84,6 +76,30 @@ class IntergratorEuler(IntegratorBase):
         return df_r_t
 
 
+    def step(self, df_clust, df_F):
+        """combination of setp_r and setp_v for more efficient computation
+
+        :param df_clust: cluster data - position, velocity, and mass
+        :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust_input
+        :param df_F: force per unit of mass acting on each particle
+        :type df_F: pyspark.sql.DataFrame, with schema schemas.F_id
+        :returns: the new velocity of each particle
+        :rtype: pyspark.sql.DataFrame, with schema schemas.clust
+        """
+        df_clust = df_F.join(df_clust, "id").selectExpr(
+            "id",
+            f"`Fx`*{self.dt}*{self.dt}/2 + `vx` * {self.dt} + `x` as `x`",
+            f"`Fy`*{self.dt}*{self.dt}/2 + `vy` * {self.dt} + `y` as `y`",
+            f"`Fz`*{self.dt}*{self.dt}/2 + `vz` * {self.dt} + `z` as `z`",
+            f"`Fx`*{self.dt} + `vx` as `vx`",
+            f"`Fy`*{self.dt} + `vy` as `vy`",
+            f"`Fz`*{self.dt} + `vz` as `vz`",
+            "m"
+        )
+
+        return df_clust
+
+
 class IntergratorEuler2(IntergratorEuler):
     """Improved Euler integrator - 2nd order. After calculating F(1) for the current position,
     it calculates provisional coordiantes r(1) (this is like the original so far).
@@ -100,17 +116,12 @@ class IntergratorEuler2(IntergratorEuler):
         :rtype: tuple (pyspark.sql.DataFrame, with schema schemas.clust_input, float)
         """
 
-        # df_clust = df_clust.repartition(self.nparts, "id")
-        df_clust = df_clust.localCheckpoint()
+        df_F1 = self.calc_F(df_clust)
+        df_F1 = df_F1.cache()
 
-        df_F1 = self.calc_F(df_clust)  # .repartition(self.nparts, "id")
-        df_F1 = df_F1.localCheckpoint()
-
-        df_r1 = self.step_r(df_clust, df_F1)  # .repartition(self.nparts, "id")
-        df_r1 = df_r1.localCheckpoint()
+        df_r1 = self.step_r(df_clust, df_F1)
 
         df_F2 = self.calc_F(df_r1)
-        df_F2 = df_F2.localCheckpoint()
 
         df_F = utils.df_elementwise(df_F1, df_F2, "id", "+", "Fx", "Fy", "Fz")
         df_F = df_F.selectExpr("id",
@@ -118,14 +129,8 @@ class IntergratorEuler2(IntergratorEuler):
                                "`Fy` / 2 as `Fy`",
                                "`Fz` / 2 as `Fz`"
                                )
-        df_F = df_F.localCheckpoint()
 
-        df_v, df_r = self.step_v(df_clust, df_F), self.step_r(
-            df_clust, df_F)
-
-        df_clust = df_r.join(df_v, "id")
-        # bring order back to schema
-        df_clust = df_clust.select('id', 'x', 'y', 'z', 'vx', 'vy', 'vz', 'm')
+        df_clust = self.step(df_clust, df_F)
 
         return (df_clust, self.dt)
 
@@ -153,12 +158,13 @@ class IntegratorRungeKutta4(IntegratorBase):
         """
 
         F1 = self.calc_F(df_clust)
-        F1 = F1.localCheckpoint()
+        F1 = F1.cache()
         F2 = self.calc_F(self.step(df_clust, F1, 0.5))
-        F2 = F2.localCheckpoint()
+        F2 = F2.cache()
         F3 = self.calc_F(self.step(df_clust, F2, 0.5))
-        F3.localCheckpoint()
+        F3 = F3.cache()
         F4 = self.calc_F(self.step(df_clust, F3))
+
 
         F = utils.df_elementwise(F1,
                     utils.df_elementwise(F2.selectExpr("id", "`Fx` * 2 as `Fx`", "`Fy` * 2 as `Fy`", "`Fz` * 2 as `Fz`"),
@@ -221,8 +227,6 @@ class IntegratorLeapfrog(IntegratorBase):
 
         if not self.df_F_t0:
             self.df_F_t0 = self.calc_F(df_clust)
-
-        #self.df_F_t0.sort("id").show(truncate=False)
 
         df_r = self.step_r(df_clust)
         df_F_t = self.calc_F(df_r)

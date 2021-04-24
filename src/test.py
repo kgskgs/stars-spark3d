@@ -28,8 +28,7 @@ for fname in data:
                 e,
                 -0.25,
                 diff,
-                TOLERANCE,
-                diff < TOLERANCE])
+                ])
 
 sc = SparkContext.getOrCreate()
 res = sc.parallelize(res).toDF(schema=schemas.E_test_res)

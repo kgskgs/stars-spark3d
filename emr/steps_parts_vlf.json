@@ -1,0 +1,690 @@
+[
+
+    {
+    "Name": "vlf_plummer512_001_05_p1",
+    "Args": ["spark-submit",
+            "--deploy-mode","cluster",
+            "--py-files","s3://kgs-s3/scripts/src.zip",
+            "--name","vlf_plummer512_001_05_p1",
+            "--conf","spark.default.parallelism=1",
+            "--conf","spark.sql.shuffle.partitions=1",
+            "s3://kgs-s3/scripts/main.py",
+            "0.01",
+            "0.5",
+            "vlf",
+            "--dtout","0.5",
+            "s3://kgs-s3/input/plummer_512_s123.csv",
+            "--saveDiag",
+            "--outputDir","s3://kgs-s3/output/parts"
+        ],
+    "Jar": "command-runner.jar",
+    "ActionOnFailure": "CONTINUE",
+    "Type": "CUSTOM_JAR"
+  },
+
+  {
+    "Name": "vlf_plummer512_001_05_p2",
+    "Args": ["spark-submit",
+            "--deploy-mode","cluster",
+            "--py-files","s3://kgs-s3/scripts/src.zip",
+            "--name","vlf_plummer512_001_05_p2",
+            "--conf","spark.default.parallelism=2",
+            "--conf","spark.sql.shuffle.partitions=2",
+            "s3://kgs-s3/scripts/main.py",
+            "0.01",
+            "0.5",
+            "vlf",
+            "--dtout","0.5",
+            "s3://kgs-s3/input/plummer_512_s123.csv",
+            "--saveDiag",
+            "--outputDir","s3://kgs-s3/output/parts"
+        ],
+    "Jar": "command-runner.jar",
+    "ActionOnFailure": "CONTINUE",
+    "Type": "CUSTOM_JAR"
+  },
+
+  {
+    "Name": "vlf_plummer512_001_05_p4",
+    "Args": ["spark-submit",
+            "--deploy-mode","cluster",
+            "--py-files","s3://kgs-s3/scripts/src.zip",
+            "--name","vlf_plummer512_001_05_p4",
+            "--conf","spark.default.parallelism=4",
+            "--conf","spark.sql.shuffle.partitions=4",
+            "s3://kgs-s3/scripts/main.py",
+            "0.01",
+            "0.5",
+            "vlf",
+            "--dtout","0.5",
+            "s3://kgs-s3/input/plummer_512_s123.csv",
+            "--saveDiag",
+            "--outputDir","s3://kgs-s3/output/parts"
+        ],
+    "Jar": "command-runner.jar",
+    "ActionOnFailure": "CONTINUE",
+    "Type": "CUSTOM_JAR"
+  },
+
+
+
+  {
+    "Name": "vlf_plummer512_001_05_p8",
+    "Args": ["spark-submit",
+            "--deploy-mode","cluster",
+            "--py-files","s3://kgs-s3/scripts/src.zip",
+            "--name","vlf_plummer512_001_05_p8",
+            "--conf","spark.default.parallelism=8",
+            "--conf","spark.sql.shuffle.partitions=8",
+            "s3://kgs-s3/scripts/main.py",
+            "0.01",
+            "0.5",
+            "vlf",
+            "--dtout","0.5",
+            "s3://kgs-s3/input/plummer_512_s123.csv",
+            "--saveDiag",
+            "--outputDir","s3://kgs-s3/output/parts"
+        ],
+    "Jar": "command-runner.jar",
+    "ActionOnFailure": "CONTINUE",
+    "Type": "CUSTOM_JAR"
+  },
+
+
+
+  {
+    "Name": "vlf_plummer1024_001_05_p2",
+    "Args": ["spark-submit",
+            "--deploy-mode","cluster",
+            "--py-files","s3://kgs-s3/scripts/src.zip",
+            "--name","vlf_plummer1024_001_05_p2",
+            "--conf","spark.default.parallelism=2",
+            "--conf","spark.sql.shuffle.partitions=2",
+            "s3://kgs-s3/scripts/main.py",
+            "0.01",
+            "0.5",
+            "vlf",
+            "--dtout","0.5",
+            "s3://kgs-s3/input/plummer_1024_s123.csv",
+            "--saveDiag",
+            "--outputDir","s3://kgs-s3/output/parts"
+        ],
+    "Jar": "command-runner.jar",
+    "ActionOnFailure": "CONTINUE",
+    "Type": "CUSTOM_JAR"
+  },
+
+
+
+  {
+    "Name": "vlf_plummer1024_001_05_p4",
+    "Args": ["spark-submit",
+            "--deploy-mode","cluster",
+            "--py-files","s3://kgs-s3/scripts/src.zip",
+            "--name","vlf_plummer1024_001_05_p4",
+            "--conf","spark.default.parallelism=4",
+            "--conf","spark.sql.shuffle.partitions=4",
+            "s3://kgs-s3/scripts/main.py",
+            "0.01",
+            "0.5",
+            "vlf",
+            "--dtout","0.5",
+            "s3://kgs-s3/input/plummer_1024_s123.csv",
+            "--saveDiag",
+            "--outputDir","s3://kgs-s3/output/parts"
+        ],
+    "Jar": "command-runner.jar",
+    "ActionOnFailure": "CONTINUE",
+    "Type": "CUSTOM_JAR"
+  },
+
+
+
+    {
+    "Name": "vlf_plummer1024_001_05_p8",
+    "Args": ["spark-submit",
+            "--deploy-mode","cluster",
+            "--py-files","s3://kgs-s3/scripts/src.zip",
+            "--name","vlf_plummer1024_001_05_p8",
+            "--conf","spark.default.parallelism=8",
+            "--conf","spark.sql.shuffle.partitions=8",
+            "s3://kgs-s3/scripts/main.py",
+            "0.01",
+            "0.5",
+            "vlf",
+            "--dtout","0.5",
+            "s3://kgs-s3/input/plummer_1024_s123.csv",
+            "--saveDiag",
+            "--outputDir","s3://kgs-s3/output/parts"
+        ],
+    "Jar": "command-runner.jar",
+    "ActionOnFailure": "CONTINUE",
+    "Type": "CUSTOM_JAR"
+  },
+
+    {
+    "Name": "vlf_plummer1024_001_05_p16",
+    "Args": ["spark-submit",
+            "--deploy-mode","cluster",
+            "--py-files","s3://kgs-s3/scripts/src.zip",
+            "--name","vlf_plummer1024_001_05_p16",
+            "--conf","spark.default.parallelism=16",
+            "--conf","spark.sql.shuffle.partitions=16",
+            "s3://kgs-s3/scripts/main.py",
+            "0.01",
+            "0.5",
+            "vlf",
+            "--dtout","0.5",
+            "s3://kgs-s3/input/plummer_1024_s123.csv",
+            "--saveDiag",
+            "--outputDir","s3://kgs-s3/output/parts"
+        ],
+    "Jar": "command-runner.jar",
+    "ActionOnFailure": "CONTINUE",
+    "Type": "CUSTOM_JAR"
+  },
+
+    {
+    "Name": "vlf_plummer1024_001_05_p24",
+    "Args": ["spark-submit",
+            "--deploy-mode","cluster",
+            "--py-files","s3://kgs-s3/scripts/src.zip",
+            "--name","vlf_plummer1024_001_05_p24",
+            "--conf","spark.default.parallelism=24",
+            "--conf","spark.sql.shuffle.partitions=24",
+            "s3://kgs-s3/scripts/main.py",
+            "0.01",
+            "0.5",
+            "vlf",
+            "--dtout","0.5",
+            "s3://kgs-s3/input/plummer_1024_s123.csv",
+            "--saveDiag",
+            "--outputDir","s3://kgs-s3/output/parts"
+        ],
+    "Jar": "command-runner.jar",
+    "ActionOnFailure": "CONTINUE",
+    "Type": "CUSTOM_JAR"
+  },
+
+
+
+
+  {
+    "Name": "vlf_plummer2048_001_05_p4",
+    "Args": ["spark-submit",
+            "--deploy-mode","cluster",
+            "--py-files","s3://kgs-s3/scripts/src.zip",
+            "--name","vlf_plummer2048_001_05_p4",
+            "--conf","spark.default.parallelism=4",
+            "--conf","spark.sql.shuffle.partitions=4",
+            "s3://kgs-s3/scripts/main.py",
+            "0.01",
+            "0.5",
+            "vlf",
+            "--dtout","0.5",
+            "s3://kgs-s3/input/plummer_2048_s123.csv",
+            "--saveDiag",
+            "--outputDir","s3://kgs-s3/output/parts"
+        ],
+    "Jar": "command-runner.jar",
+    "ActionOnFailure": "CONTINUE",
+    "Type": "CUSTOM_JAR"
+  },
+
+  {
+    "Name": "vlf_plummer2048_001_05_p8",
+    "Args": ["spark-submit",
+            "--deploy-mode","cluster",
+            "--py-files","s3://kgs-s3/scripts/src.zip",
+            "--name","vlf_plummer2048_001_05_p8",
+            "--conf","spark.default.parallelism=8",
+            "--conf","spark.sql.shuffle.partitions=8",
+            "s3://kgs-s3/scripts/main.py",
+            "0.01",
+            "0.5",
+            "vlf",
+            "--dtout","0.5",
+            "s3://kgs-s3/input/plummer_2048_s123.csv",
+            "--saveDiag",
+            "--outputDir","s3://kgs-s3/output/parts"
+        ],
+    "Jar": "command-runner.jar",
+    "ActionOnFailure": "CONTINUE",
+    "Type": "CUSTOM_JAR"
+  },
+
+  {
+    "Name": "vlf_plummer2048_001_05_p16",
+    "Args": ["spark-submit",
+            "--deploy-mode","cluster",
+            "--py-files","s3://kgs-s3/scripts/src.zip",
+            "--name","vlf_plummer2048_001_05_p16",
+            "--conf","spark.default.parallelism=16",
+            "--conf","spark.sql.shuffle.partitions=16",
+            "s3://kgs-s3/scripts/main.py",
+            "0.01",
+            "0.5",
+            "vlf",
+            "--dtout","0.5",
+            "s3://kgs-s3/input/plummer_2048_s123.csv",
+            "--saveDiag",
+            "--outputDir","s3://kgs-s3/output/parts"
+        ],
+    "Jar": "command-runner.jar",
+    "ActionOnFailure": "CONTINUE",
+    "Type": "CUSTOM_JAR"
+  },
+
+  {
+    "Name": "vlf_plummer2048_001_05_p24",
+    "Args": ["spark-submit",
+            "--deploy-mode","cluster",
+            "--py-files","s3://kgs-s3/scripts/src.zip",
+            "--name","vlf_plummer2048_001_05_p24",
+            "--conf","spark.default.parallelism=24",
+            "--conf","spark.sql.shuffle.partitions=24",
+            "s3://kgs-s3/scripts/main.py",
+            "0.01",
+            "0.5",
+            "vlf",
+            "--dtout","0.5",
+            "s3://kgs-s3/input/plummer_2048_s123.csv",
+            "--saveDiag",
+            "--outputDir","s3://kgs-s3/output/parts"
+        ],
+    "Jar": "command-runner.jar",
+    "ActionOnFailure": "CONTINUE",
+    "Type": "CUSTOM_JAR"
+  },
+
+
+  {
+    "Name": "vlf_plummer4096_001_05_p4",
+    "Args": ["spark-submit",
+            "--deploy-mode","cluster",
+            "--py-files","s3://kgs-s3/scripts/src.zip",
+            "--name","vlf_plummer4096_001_05_p4",
+            "--conf","spark.default.parallelism=4",
+            "--conf","spark.sql.shuffle.partitions=4",
+            "s3://kgs-s3/scripts/main.py",
+            "0.01",
+            "0.5",
+            "vlf",
+            "--dtout","0.5",
+            "s3://kgs-s3/input/plummer_4096_s0.csv",
+            "--saveDiag",
+            "--outputDir","s3://kgs-s3/output/parts"
+        ],
+    "Jar": "command-runner.jar",
+    "ActionOnFailure": "CONTINUE",
+    "Type": "CUSTOM_JAR"
+  },
+
+
+
+  {
+    "Name": "vlf_plummer4096_001_05_p8",
+    "Args": ["spark-submit",
+            "--deploy-mode","cluster",
+            "--py-files","s3://kgs-s3/scripts/src.zip",
+            "--name","vlf_plummer4096_001_05_p8",
+            "--conf","spark.default.parallelism=8",
+            "--conf","spark.sql.shuffle.partitions=8",
+            "s3://kgs-s3/scripts/main.py",
+            "0.01",
+            "0.5",
+            "vlf",
+            "--dtout","0.5",
+            "s3://kgs-s3/input/plummer_4096_s0.csv",
+            "--saveDiag",
+            "--outputDir","s3://kgs-s3/output/parts"
+        ],
+    "Jar": "command-runner.jar",
+    "ActionOnFailure": "CONTINUE",
+    "Type": "CUSTOM_JAR"
+  },
+
+
+  {
+    "Name": "vlf_plummer4096_001_05_p16",
+    "Args": ["spark-submit",
+            "--deploy-mode","cluster",
+            "--py-files","s3://kgs-s3/scripts/src.zip",
+            "--name","vlf_plummer4096_001_05_p16",
+            "--conf","spark.default.parallelism=16",
+            "--conf","spark.sql.shuffle.partitions=16",
+            "s3://kgs-s3/scripts/main.py",
+            "0.01",
+            "0.5",
+            "vlf",
+            "--dtout","0.5",
+            "s3://kgs-s3/input/plummer_4096_s0.csv",
+            "--saveDiag",
+            "--outputDir","s3://kgs-s3/output/parts"
+        ],
+    "Jar": "command-runner.jar",
+    "ActionOnFailure": "CONTINUE",
+    "Type": "CUSTOM_JAR"
+  },
+
+
+  {
+    "Name": "vlf_plummer4096_001_05_p24",
+    "Args": ["spark-submit",
+            "--deploy-mode","cluster",
+            "--py-files","s3://kgs-s3/scripts/src.zip",
+            "--name","vlf_plummer4096_001_05_p24",
+            "--conf","spark.default.parallelism=24",
+            "--conf","spark.sql.shuffle.partitions=24",
+            "s3://kgs-s3/scripts/main.py",
+            "0.01",
+            "0.5",
+            "vlf",
+            "--dtout","0.5",
+            "s3://kgs-s3/input/plummer_4096_s0.csv",
+            "--saveDiag",
+            "--outputDir","s3://kgs-s3/output/parts"
+        ],
+    "Jar": "command-runner.jar",
+    "ActionOnFailure": "CONTINUE",
+    "Type": "CUSTOM_JAR"
+  },
+
+
+  {
+    "Name": "vlf_plummer8192_001_05_p4",
+    "Args": ["spark-submit",
+            "--deploy-mode","cluster",
+            "--py-files","s3://kgs-s3/scripts/src.zip",
+            "--name","vlf_plummer8192_001_05_p4",
+            "--conf","spark.default.parallelism=4",
+            "--conf","spark.sql.shuffle.partitions=4",
+            "s3://kgs-s3/scripts/main.py",
+            "0.01",
+            "0.5",
+            "vlf",
+            "--dtout","0.5",
+            "s3://kgs-s3/input/plummer_8192_s0.csv",
+            "--saveDiag",
+            "--outputDir","s3://kgs-s3/output/parts"
+        ],
+    "Jar": "command-runner.jar",
+    "ActionOnFailure": "CONTINUE",
+    "Type": "CUSTOM_JAR"
+  },
+
+
+
+  {
+    "Name": "vlf_plummer8192_001_05_p8",
+    "Args": ["spark-submit",
+            "--deploy-mode","cluster",
+            "--py-files","s3://kgs-s3/scripts/src.zip",
+            "--name","vlf_plummer8192_001_05_p8",
+            "--conf","spark.default.parallelism=8",
+            "--conf","spark.sql.shuffle.partitions=8",
+            "s3://kgs-s3/scripts/main.py",
+            "0.01",
+            "0.5",
+            "vlf",
+            "--dtout","0.5",
+            "s3://kgs-s3/input/plummer_8192_s0.csv",
+            "--saveDiag",
+            "--outputDir","s3://kgs-s3/output/parts"
+        ],
+    "Jar": "command-runner.jar",
+    "ActionOnFailure": "CONTINUE",
+    "Type": "CUSTOM_JAR"
+  },
+
+
+  {
+    "Name": "vlf_plummer8192_001_05_p16",
+    "Args": ["spark-submit",
+            "--deploy-mode","cluster",
+            "--py-files","s3://kgs-s3/scripts/src.zip",
+            "--name","vlf_plummer8192_001_05_p16",
+            "--conf","spark.default.parallelism=16",
+            "--conf","spark.sql.shuffle.partitions=16",
+            "s3://kgs-s3/scripts/main.py",
+            "0.01",
+            "0.5",
+            "vlf",
+            "--dtout","0.5",
+            "s3://kgs-s3/input/plummer_8192_s0.csv",
+            "--saveDiag",
+            "--outputDir","s3://kgs-s3/output/parts"
+        ],
+    "Jar": "command-runner.jar",
+    "ActionOnFailure": "CONTINUE",
+    "Type": "CUSTOM_JAR"
+  },
+
+  {
+    "Name": "vlf_plummer8192_001_05_p24",
+    "Args": ["spark-submit",
+            "--deploy-mode","cluster",
+            "--py-files","s3://kgs-s3/scripts/src.zip",
+            "--name","vlf_plummer8192_001_05_p24",
+            "--conf","spark.default.parallelism=24",
+            "--conf","spark.sql.shuffle.partitions=24",
+            "s3://kgs-s3/scripts/main.py",
+            "0.01",
+            "0.5",
+            "vlf",
+            "--dtout","0.5",
+            "s3://kgs-s3/input/plummer_8192_s0.csv",
+            "--saveDiag",
+            "--outputDir","s3://kgs-s3/output/parts"
+        ],
+    "Jar": "command-runner.jar",
+    "ActionOnFailure": "CONTINUE",
+    "Type": "CUSTOM_JAR"
+  },
+
+
+  {
+    "Name": "vlf_plummer16384_001_05_p4",
+    "Args": ["spark-submit",
+            "--deploy-mode","cluster",
+            "--py-files","s3://kgs-s3/scripts/src.zip",
+            "--name","vlf_plummer16384_001_05_p4",
+            "--conf","spark.default.parallelism=4",
+            "--conf","spark.sql.shuffle.partitions=4",
+            "s3://kgs-s3/scripts/main.py",
+            "0.01",
+            "0.5",
+            "vlf",
+            "--dtout","0.5",
+            "s3://kgs-s3/input/plummer_16384_s0.csv",
+            "--saveDiag",
+            "--outputDir","s3://kgs-s3/output/parts"
+        ],
+    "Jar": "command-runner.jar",
+    "ActionOnFailure": "CONTINUE",
+    "Type": "CUSTOM_JAR"
+  },
+
+
+  {
+    "Name": "vlf_plummer16384_001_05_p8",
+    "Args": ["spark-submit",
+            "--deploy-mode","cluster",
+            "--py-files","s3://kgs-s3/scripts/src.zip",
+            "--name","vlf_plummer16384_001_05_p8",
+            "--conf","spark.default.parallelism=8",
+            "--conf","spark.sql.shuffle.partitions=8",
+            "s3://kgs-s3/scripts/main.py",
+            "0.01",
+            "0.5",
+            "vlf",
+            "--dtout","0.5",
+            "s3://kgs-s3/input/plummer_16384_s0.csv",
+            "--saveDiag",
+            "--outputDir","s3://kgs-s3/output/parts"
+        ],
+    "Jar": "command-runner.jar",
+    "ActionOnFailure": "CONTINUE",
+    "Type": "CUSTOM_JAR"
+  },
+
+  {
+    "Name": "vlf_plummer16384_001_05_p16",
+    "Args": ["spark-submit",
+            "--deploy-mode","cluster",
+            "--py-files","s3://kgs-s3/scripts/src.zip",
+            "--name","vlf_plummer16384_001_05_p16",
+            "--conf","spark.default.parallelism=16",
+            "--conf","spark.sql.shuffle.partitions=16",
+            "s3://kgs-s3/scripts/main.py",
+            "0.01",
+            "0.5",
+            "vlf",
+            "--dtout","0.5",
+            "s3://kgs-s3/input/plummer_16384_s0.csv",
+            "--saveDiag",
+            "--outputDir","s3://kgs-s3/output/parts"
+        ],
+    "Jar": "command-runner.jar",
+    "ActionOnFailure": "CONTINUE",
+    "Type": "CUSTOM_JAR"
+  },
+
+
+  {
+    "Name": "vlf_plummer16384_001_05_p24",
+    "Args": ["spark-submit",
+            "--deploy-mode","cluster",
+            "--py-files","s3://kgs-s3/scripts/src.zip",
+            "--name","vlf_plummer16384_001_05_p24",
+            "--conf","spark.default.parallelism=24",
+            "--conf","spark.sql.shuffle.partitions=24",
+            "s3://kgs-s3/scripts/main.py",
+            "0.01",
+            "0.5",
+            "vlf",
+            "--dtout","0.5",
+            "s3://kgs-s3/input/plummer_16384_s0.csv",
+            "--saveDiag",
+            "--outputDir","s3://kgs-s3/output/parts"
+        ],
+    "Jar": "command-runner.jar",
+    "ActionOnFailure": "CONTINUE",
+    "Type": "CUSTOM_JAR"
+  },
+
+  {
+    "Name": "vlf_plummer16384_001_05_p32",
+    "Args": ["spark-submit",
+            "--deploy-mode","cluster",
+            "--py-files","s3://kgs-s3/scripts/src.zip",
+            "--name","vlf_plummer16384_001_05_p32",
+            "--conf","spark.default.parallelism=32",
+            "--conf","spark.sql.shuffle.partitions=32",
+            "s3://kgs-s3/scripts/main.py",
+            "0.01",
+            "0.5",
+            "vlf",
+            "--dtout","0.5",
+            "s3://kgs-s3/input/plummer_16384_s0.csv",
+            "--saveDiag",
+            "--outputDir","s3://kgs-s3/output/parts"
+        ],
+    "Jar": "command-runner.jar",
+    "ActionOnFailure": "CONTINUE",
+    "Type": "CUSTOM_JAR"
+  },
+
+
+
+
+  {
+    "Name": "vlf_plummer32768_001_02_p8",
+    "Args": ["spark-submit",
+            "--deploy-mode","cluster",
+            "--py-files","s3://kgs-s3/scripts/src.zip",
+            "--name","vlf_plummer32768_001_02_p8",
+            "--conf","spark.default.parallelism=8",
+            "--conf","spark.sql.shuffle.partitions=8",
+            "s3://kgs-s3/scripts/main.py",
+            "0.01",
+            "0.2",
+            "vlf",
+            "--dtout","0.2",
+            "s3://kgs-s3/input/plummer_32768_s0.csv",
+            "--saveDiag",
+            "--outputDir","s3://kgs-s3/output/parts"
+        ],
+    "Jar": "command-runner.jar",
+    "ActionOnFailure": "CONTINUE",
+    "Type": "CUSTOM_JAR"
+  },
+
+
+  {
+    "Name": "vlf_plummer32768_001_02_p16",
+    "Args": ["spark-submit",
+            "--deploy-mode","cluster",
+            "--py-files","s3://kgs-s3/scripts/src.zip",
+            "--name","vlf_plummer32768_001_02_p16",
+            "--conf","spark.default.parallelism=16",
+            "--conf","spark.sql.shuffle.partitions=16",
+            "s3://kgs-s3/scripts/main.py",
+            "0.01",
+            "0.2",
+            "vlf",
+            "--dtout","0.2",
+            "s3://kgs-s3/input/plummer_32768_s0.csv",
+            "--saveDiag",
+            "--outputDir","s3://kgs-s3/output/parts"
+        ],
+    "Jar": "command-runner.jar",
+    "ActionOnFailure": "CONTINUE",
+    "Type": "CUSTOM_JAR"
+  },
+
+  {
+    "Name": "vlf_plummer32768_001_02_p24",
+    "Args": ["spark-submit",
+            "--deploy-mode","cluster",
+            "--py-files","s3://kgs-s3/scripts/src.zip",
+            "--name","vlf_plummer32768_001_02_p24",
+            "--conf","spark.default.parallelism=24",
+            "--conf","spark.sql.shuffle.partitions=24",
+            "s3://kgs-s3/scripts/main.py",
+            "0.01",
+            "0.2",
+            "vlf",
+            "--dtout","0.2",
+            "s3://kgs-s3/input/plummer_32768_s0.csv",
+            "--saveDiag",
+            "--outputDir","s3://kgs-s3/output/parts"
+        ],
+    "Jar": "command-runner.jar",
+    "ActionOnFailure": "CONTINUE",
+    "Type": "CUSTOM_JAR"
+  },
+
+ {
+    "Name": "vlf_plummer32768_001_02_p32",
+    "Args": ["spark-submit",
+            "--deploy-mode","cluster",
+            "--py-files","s3://kgs-s3/scripts/src.zip",
+            "--name","vlf_plummer32768_001_02_p32",
+            "--conf","spark.default.parallelism=32",
+            "--conf","spark.sql.shuffle.partitions=32",
+            "s3://kgs-s3/scripts/main.py",
+            "0.01",
+            "0.2",
+            "vlf",
+            "--dtout","0.2",
+            "s3://kgs-s3/input/plummer_32768_s0.csv",
+            "--saveDiag",
+            "--outputDir","s3://kgs-s3/output/parts"
+        ],
+    "Jar": "command-runner.jar",
+    "ActionOnFailure": "CONTINUE",
+    "Type": "CUSTOM_JAR"
+  }
+
+]

@@ -6,8 +6,6 @@ from mpl_toolkits.mplot3d import Axes3D
 import re
 
 from pyspark.sql.session import SparkSession
-from pyspark.sql.functions import row_number
-from pyspark.sql import Window
 from pyspark import AccumulatorParam
 
 
@@ -115,9 +113,6 @@ def df_x_cartesian(df, ffilter=None):
     if ffilter:
         return df_cart.filter(ffilter)
     return df_cart
-
-
-
 
 
 def df_elementwise(df, df_other, idCol, op, *cols, renameOutput=False):
@@ -376,12 +371,12 @@ class SaveOptions(dict):
 
     :param pth: path to the folder the file(s) is in
     :type pth: str
-    :param **kwargs: additional arguments to pass to save
-    :type **kwargs: dict
     :param fformat: format to save in, defaults to "parquet"
     :type fformat: str, optional
     :param compression: compression to use, defaults to "gzip"
     :type compression: str, optional
+    :param **kwargs: additional arguments to pass to save
+    :type **kwargs: dict
     """
     __slots__ = ()
     def __init__(self, pth, fformat="parquet", compression="gzip", **kwargs):

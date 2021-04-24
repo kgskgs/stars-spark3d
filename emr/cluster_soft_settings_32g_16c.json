@@ -54,7 +54,8 @@
          "spark.sql.adaptive.enabled":"true",
          "spark.sql.execution.reuseSubquery":"true",
          "spark.sql.adaptive.localShuffleReader.enabled":"true",
-         "spark.sql.adaptive.coalescePartitions.enabled":"true"
+         "spark.sql.adaptive.coalescePartitions.enabled":"true",
+         "spark.eventLog.compress":"true"
       },
       "configurations":[
          

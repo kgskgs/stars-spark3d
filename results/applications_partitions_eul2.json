@@ -1,0 +1,481 @@
+[ {
+  "id" : "application_1618834155157_0030",
+  "name" : "eul2_plummer32768_001_02_p32",
+  "attempts" : [ {
+    "attemptId" : "1",
+    "startTime" : "2021-04-19T15:41:29.223GMT",
+    "endTime" : "2021-04-19T16:05:07.489GMT",
+    "lastUpdated" : "2021-04-19T16:05:07.527GMT",
+    "duration" : 1418266,
+    "sparkUser" : "hadoop",
+    "completed" : true,
+    "appSparkVersion" : "3.0.1-amzn-0",
+    "lastUpdatedEpoch" : 1618848307527,
+    "endTimeEpoch" : 1618848307489,
+    "startTimeEpoch" : 1618846889223
+  } ]
+}, {
+  "id" : "application_1618834155157_0029",
+  "name" : "eul2_plummer32768_001_02_p24",
+  "attempts" : [ {
+    "attemptId" : "1",
+    "startTime" : "2021-04-19T15:19:19.697GMT",
+    "endTime" : "2021-04-19T15:40:57.630GMT",
+    "lastUpdated" : "2021-04-19T15:40:57.662GMT",
+    "duration" : 1297933,
+    "sparkUser" : "hadoop",
+    "completed" : true,
+    "appSparkVersion" : "3.0.1-amzn-0",
+    "lastUpdatedEpoch" : 1618846857662,
+    "endTimeEpoch" : 1618846857630,
+    "startTimeEpoch" : 1618845559697
+  } ]
+}, {
+  "id" : "application_1618834155157_0028",
+  "name" : "eul2_plummer32768_001_02_p16",
+  "attempts" : [ {
+    "attemptId" : "1",
+    "startTime" : "2021-04-19T14:56:48.678GMT",
+    "endTime" : "2021-04-19T15:18:51.215GMT",
+    "lastUpdated" : "2021-04-19T15:18:51.250GMT",
+    "duration" : 1322537,
+    "sparkUser" : "hadoop",
+    "completed" : true,
+    "appSparkVersion" : "3.0.1-amzn-0",
+    "lastUpdatedEpoch" : 1618845531250,
+    "endTimeEpoch" : 1618845531215,
+    "startTimeEpoch" : 1618844208678
+  } ]
+}, {
+  "id" : "application_1618834155157_0027",
+  "name" : "eul2_plummer32768_001_02_p8",
+  "attempts" : [ {
+    "attemptId" : "1",
+    "startTime" : "2021-04-19T14:30:46.889GMT",
+    "endTime" : "2021-04-19T14:56:22.721GMT",
+    "lastUpdated" : "2021-04-19T14:56:22.754GMT",
+    "duration" : 1535832,
+    "sparkUser" : "hadoop",
+    "completed" : true,
+    "appSparkVersion" : "3.0.1-amzn-0",
+    "lastUpdatedEpoch" : 1618844182754,
+    "endTimeEpoch" : 1618844182721,
+    "startTimeEpoch" : 1618842646889
+  } ]
+}, {
+  "id" : "application_1618834155157_0026",
+  "name" : "eul2_plummer16384_001_05_p32",
+  "attempts" : [ {
+    "attemptId" : "1",
+    "startTime" : "2021-04-19T14:14:49.835GMT",
+    "endTime" : "2021-04-19T14:30:19.284GMT",
+    "lastUpdated" : "2021-04-19T14:30:19.320GMT",
+    "duration" : 929449,
+    "sparkUser" : "hadoop",
+    "completed" : true,
+    "appSparkVersion" : "3.0.1-amzn-0",
+    "lastUpdatedEpoch" : 1618842619320,
+    "endTimeEpoch" : 1618842619284,
+    "startTimeEpoch" : 1618841689835
+  } ]
+}, {
+  "id" : "application_1618834155157_0025",
+  "name" : "eul2_plummer16384_001_05_p24",
+  "attempts" : [ {
+    "attemptId" : "1",
+    "startTime" : "2021-04-19T14:00:25.888GMT",
+    "endTime" : "2021-04-19T14:14:26.420GMT",
+    "lastUpdated" : "2021-04-19T14:14:26.460GMT",
+    "duration" : 840532,
+    "sparkUser" : "hadoop",
+    "completed" : true,
+    "appSparkVersion" : "3.0.1-amzn-0",
+    "lastUpdatedEpoch" : 1618841666460,
+    "endTimeEpoch" : 1618841666420,
+    "startTimeEpoch" : 1618840825888
+  } ]
+}, {
+  "id" : "application_1618834155157_0024",
+  "name" : "eul2_plummer16384_001_05_p16",
+  "attempts" : [ {
+    "attemptId" : "1",
+    "startTime" : "2021-04-19T13:45:30.914GMT",
+    "endTime" : "2021-04-19T13:59:59.626GMT",
+    "lastUpdated" : "2021-04-19T13:59:59.664GMT",
+    "duration" : 868712,
+    "sparkUser" : "hadoop",
+    "completed" : true,
+    "appSparkVersion" : "3.0.1-amzn-0",
+    "lastUpdatedEpoch" : 1618840799664,
+    "endTimeEpoch" : 1618840799626,
+    "startTimeEpoch" : 1618839930914
+  } ]
+}, {
+  "id" : "application_1618834155157_0023",
+  "name" : "eul2_plummer16384_001_05_p8",
+  "attempts" : [ {
+    "attemptId" : "1",
+    "startTime" : "2021-04-19T13:27:32.248GMT",
+    "endTime" : "2021-04-19T13:44:58.754GMT",
+    "lastUpdated" : "2021-04-19T13:44:58.793GMT",
+    "duration" : 1046506,
+    "sparkUser" : "hadoop",
+    "completed" : true,
+    "appSparkVersion" : "3.0.1-amzn-0",
+    "lastUpdatedEpoch" : 1618839898793,
+    "endTimeEpoch" : 1618839898754,
+    "startTimeEpoch" : 1618838852248
+  } ]
+}, {
+  "id" : "application_1618834155157_0022",
+  "name" : "eul2_plummer16384_001_05_p4",
+  "attempts" : [ {
+    "attemptId" : "1",
+    "startTime" : "2021-04-19T13:06:49.088GMT",
+    "endTime" : "2021-04-19T13:27:04.359GMT",
+    "lastUpdated" : "2021-04-19T13:27:04.398GMT",
+    "duration" : 1215271,
+    "sparkUser" : "hadoop",
+    "completed" : true,
+    "appSparkVersion" : "3.0.1-amzn-0",
+    "lastUpdatedEpoch" : 1618838824398,
+    "endTimeEpoch" : 1618838824359,
+    "startTimeEpoch" : 1618837609088
+  } ]
+}, {
+  "id" : "application_1618834155157_0021",
+  "name" : "eul2_plummer8192_001_05_p24",
+  "attempts" : [ {
+    "attemptId" : "1",
+    "startTime" : "2021-04-19T13:01:43.860GMT",
+    "endTime" : "2021-04-19T13:06:22.863GMT",
+    "lastUpdated" : "2021-04-19T13:06:22.903GMT",
+    "duration" : 279003,
+    "sparkUser" : "hadoop",
+    "completed" : true,
+    "appSparkVersion" : "3.0.1-amzn-0",
+    "lastUpdatedEpoch" : 1618837582903,
+    "endTimeEpoch" : 1618837582863,
+    "startTimeEpoch" : 1618837303860
+  } ]
+}, {
+  "id" : "application_1618834155157_0020",
+  "name" : "eul2_plummer8192_001_05_p16",
+  "attempts" : [ {
+    "attemptId" : "1",
+    "startTime" : "2021-04-19T12:56:45.588GMT",
+    "endTime" : "2021-04-19T13:01:20.477GMT",
+    "lastUpdated" : "2021-04-19T13:01:20.519GMT",
+    "duration" : 274889,
+    "sparkUser" : "hadoop",
+    "completed" : true,
+    "appSparkVersion" : "3.0.1-amzn-0",
+    "lastUpdatedEpoch" : 1618837280519,
+    "endTimeEpoch" : 1618837280477,
+    "startTimeEpoch" : 1618837005588
+  } ]
+}, {
+  "id" : "application_1618834155157_0019",
+  "name" : "eul2_plummer8192_001_05_p8",
+  "attempts" : [ {
+    "attemptId" : "1",
+    "startTime" : "2021-04-19T12:51:05.618GMT",
+    "endTime" : "2021-04-19T12:56:20.736GMT",
+    "lastUpdated" : "2021-04-19T12:56:20.789GMT",
+    "duration" : 315118,
+    "sparkUser" : "hadoop",
+    "completed" : true,
+    "appSparkVersion" : "3.0.1-amzn-0",
+    "lastUpdatedEpoch" : 1618836980789,
+    "endTimeEpoch" : 1618836980736,
+    "startTimeEpoch" : 1618836665618
+  } ]
+}, {
+  "id" : "application_1618834155157_0018",
+  "name" : "eul2_plummer8192_001_05_p4",
+  "attempts" : [ {
+    "attemptId" : "1",
+    "startTime" : "2021-04-19T12:45:05.641GMT",
+    "endTime" : "2021-04-19T12:50:38.938GMT",
+    "lastUpdated" : "2021-04-19T12:50:38.974GMT",
+    "duration" : 333297,
+    "sparkUser" : "hadoop",
+    "completed" : true,
+    "appSparkVersion" : "3.0.1-amzn-0",
+    "lastUpdatedEpoch" : 1618836638974,
+    "endTimeEpoch" : 1618836638938,
+    "startTimeEpoch" : 1618836305641
+  } ]
+}, {
+  "id" : "application_1618834155157_0017",
+  "name" : "eul2_plummer4096_001_05_p24",
+  "attempts" : [ {
+    "attemptId" : "1",
+    "startTime" : "2021-04-19T12:42:19.656GMT",
+    "endTime" : "2021-04-19T12:44:39.047GMT",
+    "lastUpdated" : "2021-04-19T12:44:39.088GMT",
+    "duration" : 139391,
+    "sparkUser" : "hadoop",
+    "completed" : true,
+    "appSparkVersion" : "3.0.1-amzn-0",
+    "lastUpdatedEpoch" : 1618836279088,
+    "endTimeEpoch" : 1618836279047,
+    "startTimeEpoch" : 1618836139656
+  } ]
+}, {
+  "id" : "application_1618834155157_0016",
+  "name" : "eul2_plummer4096_001_05_p16",
+  "attempts" : [ {
+    "attemptId" : "1",
+    "startTime" : "2021-04-19T12:39:56.555GMT",
+    "endTime" : "2021-04-19T12:41:55.455GMT",
+    "lastUpdated" : "2021-04-19T12:41:55.500GMT",
+    "duration" : 118900,
+    "sparkUser" : "hadoop",
+    "completed" : true,
+    "appSparkVersion" : "3.0.1-amzn-0",
+    "lastUpdatedEpoch" : 1618836115500,
+    "endTimeEpoch" : 1618836115455,
+    "startTimeEpoch" : 1618835996555
+  } ]
+}, {
+  "id" : "application_1618834155157_0015",
+  "name" : "eul2_plummer4096_001_05_p8",
+  "attempts" : [ {
+    "attemptId" : "1",
+    "startTime" : "2021-04-19T12:37:33.563GMT",
+    "endTime" : "2021-04-19T12:39:29.890GMT",
+    "lastUpdated" : "2021-04-19T12:39:29.938GMT",
+    "duration" : 116327,
+    "sparkUser" : "hadoop",
+    "completed" : true,
+    "appSparkVersion" : "3.0.1-amzn-0",
+    "lastUpdatedEpoch" : 1618835969938,
+    "endTimeEpoch" : 1618835969890,
+    "startTimeEpoch" : 1618835853563
+  } ]
+}, {
+  "id" : "application_1618834155157_0014",
+  "name" : "eul2_plummer4096_001_05_p4",
+  "attempts" : [ {
+    "attemptId" : "1",
+    "startTime" : "2021-04-19T12:34:56.731GMT",
+    "endTime" : "2021-04-19T12:37:08.181GMT",
+    "lastUpdated" : "2021-04-19T12:37:08.212GMT",
+    "duration" : 131450,
+    "sparkUser" : "hadoop",
+    "completed" : true,
+    "appSparkVersion" : "3.0.1-amzn-0",
+    "lastUpdatedEpoch" : 1618835828212,
+    "endTimeEpoch" : 1618835828181,
+    "startTimeEpoch" : 1618835696731
+  } ]
+}, {
+  "id" : "application_1618834155157_0013",
+  "name" : "eul2_plummer2048_001_05_p24",
+  "attempts" : [ {
+    "attemptId" : "1",
+    "startTime" : "2021-04-19T12:32:52.944GMT",
+    "endTime" : "2021-04-19T12:34:32.158GMT",
+    "lastUpdated" : "2021-04-19T12:34:32.195GMT",
+    "duration" : 99214,
+    "sparkUser" : "hadoop",
+    "completed" : true,
+    "appSparkVersion" : "3.0.1-amzn-0",
+    "lastUpdatedEpoch" : 1618835672195,
+    "endTimeEpoch" : 1618835672158,
+    "startTimeEpoch" : 1618835572944
+  } ]
+}, {
+  "id" : "application_1618834155157_0012",
+  "name" : "eul2_plummer2048_001_05_p16",
+  "attempts" : [ {
+    "attemptId" : "1",
+    "startTime" : "2021-04-19T12:31:05.582GMT",
+    "endTime" : "2021-04-19T12:32:26.792GMT",
+    "lastUpdated" : "2021-04-19T12:32:26.830GMT",
+    "duration" : 81210,
+    "sparkUser" : "hadoop",
+    "completed" : true,
+    "appSparkVersion" : "3.0.1-amzn-0",
+    "lastUpdatedEpoch" : 1618835546830,
+    "endTimeEpoch" : 1618835546792,
+    "startTimeEpoch" : 1618835465582
+  } ]
+}, {
+  "id" : "application_1618834155157_0011",
+  "name" : "eul2_plummer2048_001_05_p8",
+  "attempts" : [ {
+    "attemptId" : "1",
+    "startTime" : "2021-04-19T12:29:16.553GMT",
+    "endTime" : "2021-04-19T12:30:27.736GMT",
+    "lastUpdated" : "2021-04-19T12:30:27.769GMT",
+    "duration" : 71183,
+    "sparkUser" : "hadoop",
+    "completed" : true,
+    "appSparkVersion" : "3.0.1-amzn-0",
+    "lastUpdatedEpoch" : 1618835427769,
+    "endTimeEpoch" : 1618835427736,
+    "startTimeEpoch" : 1618835356553
+  } ]
+}, {
+  "id" : "application_1618834155157_0010",
+  "name" : "eul2_plummer2048_001_05_p4",
+  "attempts" : [ {
+    "attemptId" : "1",
+    "startTime" : "2021-04-19T12:27:34.723GMT",
+    "endTime" : "2021-04-19T12:28:48.531GMT",
+    "lastUpdated" : "2021-04-19T12:28:48.569GMT",
+    "duration" : 73808,
+    "sparkUser" : "hadoop",
+    "completed" : true,
+    "appSparkVersion" : "3.0.1-amzn-0",
+    "lastUpdatedEpoch" : 1618835328569,
+    "endTimeEpoch" : 1618835328531,
+    "startTimeEpoch" : 1618835254723
+  } ]
+}, {
+  "id" : "application_1618834155157_0009",
+  "name" : "eul2_plummer1024_001_05_p24",
+  "attempts" : [ {
+    "attemptId" : "1",
+    "startTime" : "2021-04-19T12:25:30.602GMT",
+    "endTime" : "2021-04-19T12:27:02.516GMT",
+    "lastUpdated" : "2021-04-19T12:27:02.554GMT",
+    "duration" : 91914,
+    "sparkUser" : "hadoop",
+    "completed" : true,
+    "appSparkVersion" : "3.0.1-amzn-0",
+    "lastUpdatedEpoch" : 1618835222554,
+    "endTimeEpoch" : 1618835222516,
+    "startTimeEpoch" : 1618835130602
+  } ]
+}, {
+  "id" : "application_1618834155157_0008",
+  "name" : "eul2_plummer1024_001_05_p16",
+  "attempts" : [ {
+    "attemptId" : "1",
+    "startTime" : "2021-04-19T12:23:45.776GMT",
+    "endTime" : "2021-04-19T12:25:00.639GMT",
+    "lastUpdated" : "2021-04-19T12:25:00.689GMT",
+    "duration" : 74863,
+    "sparkUser" : "hadoop",
+    "completed" : true,
+    "appSparkVersion" : "3.0.1-amzn-0",
+    "lastUpdatedEpoch" : 1618835100689,
+    "endTimeEpoch" : 1618835100639,
+    "startTimeEpoch" : 1618835025776
+  } ]
+}, {
+  "id" : "application_1618834155157_0007",
+  "name" : "eul2_plummer1024_001_05_p8",
+  "attempts" : [ {
+    "attemptId" : "1",
+    "startTime" : "2021-04-19T12:22:21.412GMT",
+    "endTime" : "2021-04-19T12:23:20.130GMT",
+    "lastUpdated" : "2021-04-19T12:23:20.166GMT",
+    "duration" : 58718,
+    "sparkUser" : "hadoop",
+    "completed" : true,
+    "appSparkVersion" : "3.0.1-amzn-0",
+    "lastUpdatedEpoch" : 1618835000166,
+    "endTimeEpoch" : 1618835000130,
+    "startTimeEpoch" : 1618834941412
+  } ]
+}, {
+  "id" : "application_1618834155157_0006",
+  "name" : "eul2_plummer1024_001_05_p4",
+  "attempts" : [ {
+    "attemptId" : "1",
+    "startTime" : "2021-04-19T12:20:56.562GMT",
+    "endTime" : "2021-04-19T12:21:55.065GMT",
+    "lastUpdated" : "2021-04-19T12:21:55.101GMT",
+    "duration" : 58503,
+    "sparkUser" : "hadoop",
+    "completed" : true,
+    "appSparkVersion" : "3.0.1-amzn-0",
+    "lastUpdatedEpoch" : 1618834915101,
+    "endTimeEpoch" : 1618834915065,
+    "startTimeEpoch" : 1618834856562
+  } ]
+}, {
+  "id" : "application_1618834155157_0005",
+  "name" : "eul2_plummer1024_001_05_p2",
+  "attempts" : [ {
+    "attemptId" : "1",
+    "startTime" : "2021-04-19T12:19:28.191GMT",
+    "endTime" : "2021-04-19T12:20:33.180GMT",
+    "lastUpdated" : "2021-04-19T12:20:33.219GMT",
+    "duration" : 64989,
+    "sparkUser" : "hadoop",
+    "completed" : true,
+    "appSparkVersion" : "3.0.1-amzn-0",
+    "lastUpdatedEpoch" : 1618834833219,
+    "endTimeEpoch" : 1618834833180,
+    "startTimeEpoch" : 1618834768191
+  } ]
+}, {
+  "id" : "application_1618834155157_0004",
+  "name" : "eul2_plummer512_001_05_p8",
+  "attempts" : [ {
+    "attemptId" : "1",
+    "startTime" : "2021-04-19T12:18:04.400GMT",
+    "endTime" : "2021-04-19T12:19:01.273GMT",
+    "lastUpdated" : "2021-04-19T12:19:01.311GMT",
+    "duration" : 56873,
+    "sparkUser" : "hadoop",
+    "completed" : true,
+    "appSparkVersion" : "3.0.1-amzn-0",
+    "lastUpdatedEpoch" : 1618834741311,
+    "endTimeEpoch" : 1618834741273,
+    "startTimeEpoch" : 1618834684400
+  } ]
+}, {
+  "id" : "application_1618834155157_0003",
+  "name" : "eul2_plummer512_001_05_p4",
+  "attempts" : [ {
+    "attemptId" : "1",
+    "startTime" : "2021-04-19T12:16:37.071GMT",
+    "endTime" : "2021-04-19T12:17:31.841GMT",
+    "lastUpdated" : "2021-04-19T12:17:31.890GMT",
+    "duration" : 54770,
+    "sparkUser" : "hadoop",
+    "completed" : true,
+    "appSparkVersion" : "3.0.1-amzn-0",
+    "lastUpdatedEpoch" : 1618834651890,
+    "endTimeEpoch" : 1618834651841,
+    "startTimeEpoch" : 1618834597071
+  } ]
+}, {
+  "id" : "application_1618834155157_0002",
+  "name" : "eul2_plummer512_001_05_p2",
+  "attempts" : [ {
+    "attemptId" : "1",
+    "startTime" : "2021-04-19T12:15:21.047GMT",
+    "endTime" : "2021-04-19T12:16:11.692GMT",
+    "lastUpdated" : "2021-04-19T12:16:11.728GMT",
+    "duration" : 50645,
+    "sparkUser" : "hadoop",
+    "completed" : true,
+    "appSparkVersion" : "3.0.1-amzn-0",
+    "lastUpdatedEpoch" : 1618834571728,
+    "endTimeEpoch" : 1618834571692,
+    "startTimeEpoch" : 1618834521047
+  } ]
+}, {
+  "id" : "application_1618834155157_0001",
+  "name" : "eul2_plummer512_001_05_p1",
+  "attempts" : [ {
+    "attemptId" : "1",
+    "startTime" : "2021-04-19T12:13:41.273GMT",
+    "endTime" : "2021-04-19T12:14:46.068GMT",
+    "lastUpdated" : "2021-04-19T12:14:46.102GMT",
+    "duration" : 64795,
+    "sparkUser" : "hadoop",
+    "completed" : true,
+    "appSparkVersion" : "3.0.1-amzn-0",
+    "lastUpdatedEpoch" : 1618834486102,
+    "endTimeEpoch" : 1618834486068,
+    "startTimeEpoch" : 1618834421273
+  } ]
+} ]
