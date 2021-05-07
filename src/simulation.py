@@ -11,7 +11,7 @@ class Simulation:
 
 
     :param cluster: cluster data - position and velocity [broken into componenets], and mass
-    :type cluster: pyspark.sql.DataFrame, with schema schemas.clust_input
+    :type cluster: pyspark.sql.DataFrame, with schema schemas.clust
     :param integrator: Integration method to use
     :type integrator: integrator_base.Integrator_
     :param ttarget: target time to reach when running the simulation

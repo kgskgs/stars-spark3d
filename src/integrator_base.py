@@ -26,9 +26,9 @@ class IntegratorBase(ABC):
         Has to return the same value across all implemetations as it's used in Simulation
         
         :param df_clust: cluster data - position, velocity, and mass
-        :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust_input
+        :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust
         :returns: the new positions and velocities of the particles of the cluster, and time passed
-        :rtype: tuple (pyspark.sql.DataFrame, with schema schemas.clust_input, float)
+        :rtype: tuple (pyspark.sql.DataFrame, with schema schemas.clust, float)
         """
         pass
 
@@ -43,11 +43,8 @@ class IntegratorBase(ABC):
         m - mass
         G - Gravitational Force Constant
 
-        [Aarseth, S. (2003). Gravitational N-Body Simulations: Tools and Algorithms
-        eq. (1.1)]
-
         :param df_clust: cluster data - position, velocity, and mass
-        :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust_input
+        :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust
         :returns: force per unit of mass
         :rtype: pyspark.sql.DataFrame, with schema schemas.F_id
         """
@@ -68,7 +65,7 @@ class IntegratorBase(ABC):
         to the effective force acting on a single one
 
         :param df_clust: cluster data - position, velocity, and mass
-        :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust_input
+        :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust
         :returns: the forces acting between every two particles
         :rtype: pyspark.sql.DataFrame, with schema schemas.F_cartesian
         """

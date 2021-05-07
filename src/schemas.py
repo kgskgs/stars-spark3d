@@ -12,6 +12,8 @@ clust = StructType([
     StructField('m',  DoubleType(), False)
 ])
 
+"""default input schema - cluster data"""
+
 clust_t = StructType([
     StructField('id', IntegerType(), False),
     StructField('x',  DoubleType(), False),
@@ -24,39 +26,7 @@ clust_t = StructType([
     StructField('t',  DoubleType(), False)
 ])
 
-"""Euler Integrator"""
-dist_gforce = StructType([
-    StructField("dist",   DoubleType(), False),
-    StructField("gforce", DoubleType(), False),
-    StructField("gx",     DoubleType(), False),
-    StructField("gy",     DoubleType(), False),
-    StructField("gz",     DoubleType(), False)
-])
-
-dist_gforce_cartesian = StructType([
-    StructField('id',       IntegerType(), False),
-    StructField('id_other', IntegerType(), False),
-    StructField("dist",     DoubleType(), False),
-    StructField("gforce",   DoubleType(), False),
-    StructField("gx",       DoubleType(), False),
-    StructField("gy",       DoubleType(), False),
-    StructField("gz",       DoubleType(), False)
-])
-
-gforce_id = StructType([
-    StructField('id',     IntegerType(), False),
-    StructField("gforce", DoubleType(), False),
-    StructField("gx",     DoubleType(), False),
-    StructField("gy",     DoubleType(), False),
-    StructField("gz",     DoubleType(), False)
-])
-
-
-F = StructType([
-    StructField("Fx", DoubleType(), False),
-    StructField("Fy", DoubleType(), False),
-    StructField("Fz", DoubleType(), False)
-])
+"""cluster data including, poistion, velocity, mass and time"""
 
 F_cartesian = StructType([
     StructField('id',       IntegerType(), False),
@@ -66,6 +36,7 @@ F_cartesian = StructType([
     StructField("Fz",       DoubleType(), False)
 ])
 
+"""Schema including two ids and force, used in integrator_base"""
 
 F_id = StructType([
     StructField('id', IntegerType(), False),
@@ -74,6 +45,7 @@ F_id = StructType([
     StructField("Fz", DoubleType(), False)
 ])
 
+"""Schema including id and force, used in integrator_base"""
 
 r_id = StructType([
     StructField('id', IntegerType(), False),
@@ -82,6 +54,8 @@ r_id = StructType([
     StructField("z",  DoubleType(), False)
 ])
 
+"""Schema including the id and position, used in integrators"""
+
 v_id = StructType([
     StructField('id', IntegerType(), False),
     StructField("vx", DoubleType(), False),
@@ -89,7 +63,7 @@ v_id = StructType([
     StructField("vz", DoubleType(), False)
 ])
 
-"""Test"""
+"""Schema including the id and velocity, used in integrators"""
 
 E_test_res = StructType([
     StructField('name',       StringType(), False),
@@ -98,10 +72,12 @@ E_test_res = StructType([
     StructField("difference", DoubleType(), False),
 ])
 
-"""Diagnostic"""
+"""Output schema for test.py"""
 
 diag = StructType([
     StructField('t',   DoubleType(), False),
     StructField("E",   DoubleType(), False),
     StructField("dE",  DoubleType(), False),
 ])
+
+"""Diagnostic output schema"""

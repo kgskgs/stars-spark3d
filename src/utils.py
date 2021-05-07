@@ -4,9 +4,12 @@ import os
 from matplotlib import pyplot as pl
 from mpl_toolkits.mplot3d import Axes3D
 import re
+import schemas
 
 from pyspark.sql.session import SparkSession
 from pyspark import AccumulatorParam
+from pyspark.sql.functions import row_number
+from pyspark.sql import Window
 
 
 """spark"""
@@ -82,8 +85,8 @@ def save_df(df, fname, pth, fformat="parquet", compression="gzip", **kwargs):
 def df_agg_sum(df, aggCol, *sumCols):
     """Dataframe - aggregate by column and sum
 
-    groups all the rows that have the same value for aggCol,
-    and sums their sumCols
+    groups all the rows that have the same value for aggCol, and sums their sumCols
+    
     :param df: dataframe to use
     :type df: pyspark.sql.DataFrame
     :param aggCol: column to aggrate on
@@ -150,7 +153,7 @@ def df_elementwise(df, df_other, idCol, op, *cols, renameOutput=False):
 
 
 def df_join_rename(df, df_other, idCol):
-    """Join two dataframes with the same columns and rename the second ones
+    """Join two dataframes with the same columns and rename the second one's
 
     :param df: first dataframe to use
     :type df: pyspark.sql.DataFrame
@@ -285,6 +288,20 @@ def df_collectLimit(df, limit, *cols, sortCol=None):
     return df.collect()
 
 
+def df_add_index(df, order_col):
+    """Add an index column to a dataframe
+
+    :param df: dataframe to use
+    :type df: pyspark.sql.DataFrame
+    :param order_col: column to order by
+    :type order_col: str
+    :returns: resulting dataframe
+    :rtype: pyspark.sql.DataFrame
+    """
+    return df.withColumn('index',
+                         row_number().over(Window.orderBy(order_col)) )
+
+
 """plots"""
 
 
@@ -344,6 +361,62 @@ def plot_histogram(df, col, title="Plot", fout=None):
         .transpose()[0]  # collect returns a list of lists
 
     pl.hist(arr_gfs, rwidth=0.8, bins="auto")
+
+    pl.show()
+
+
+def plot_des(dir, target="plummer", fformat="parquet",
+             times=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1], ltitle="# particles"):
+    """Takes a directory containing a number of completed applications, each of which
+    contains diagnostic outputs, and plots their total enegry errors together against time
+
+    it's assumed that the children directories are contain a number after the target string
+    parameter, that will be used for labels
+
+    :param dir: target directory
+    :type dir: str
+    :param target: string preceding the number in child directory names, defaults to "plummer"
+    :type target: str, optional}
+    :param fformat: format of the diagnostic dataframes, defaults to "parquet"
+    :type fformat: str, optional
+    :param times: times to use for the x axis, defaults to [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
+    :type times: list, optional
+
+    """
+
+    markers = ".vs^8>h+xd"
+    ls = ['-', '--', '-.', ':', ]
+
+    labels = []
+
+    paths = os.listdir(dir)
+
+    def key_n(pth):
+        n = re.compile(rf"(?<={target})\d+")
+        res = n.search(pth).group(0)
+        labels.append(res)
+        return int(res)
+
+    paths.sort(key=key_n)
+    labels.sort(key=lambda n: int(n))
+
+    for ind, pth in enumerate(paths):
+        df = load_df(os.path.join(dir, pth, f"diag*/*.{fformat}"), schema=schemas.diag)
+        df = df.sort("t")
+        #print(pth)
+        #df.show(truncate=False)
+        de64 = [abs(x[0]) for x in df.filter("t>0").select("dE").collect()]
+
+        pl.plot(times[:len(de64)], de64, marker=markers[ind % len(markers)],
+                label=labels[ind], linestyle=ls[ind % len(ls)])
+
+    pl.yscale("log")
+    pl.ylim(1e-10, 1)
+    pl.xticks(times)
+    pl.xlabel("$t$")
+    pl.ylabel("$|(E - E_0)/E_0|$")
+
+    pl.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize="x-small", frameon=False, title=ltitle)
 
     pl.show()
 

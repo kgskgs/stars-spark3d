@@ -12,9 +12,9 @@ class IntergratorEuler(IntegratorBase):
         """Advance by a step
 
         :param df_clust: cluster data - position, velocity, and mass
-        :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust_input
+        :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust
         :returns: the new positions and velocities of the particles of the cluster, and time passed
-        :rtype: tuple (pyspark.sql.DataFrame, with schema schemas.clust_input, float)
+        :rtype: tuple (pyspark.sql.DataFrame, with schema schemas.clust, float)
         """
 
         df_clust = df_clust.cache()
@@ -29,11 +29,8 @@ class IntergratorEuler(IntegratorBase):
 
             v_i(t) = F_i*∆t + v_i(t0)
 
-        [Aarseth, S. (2003). Gravitational N-Body Simulations: Tools and Algorithms
-        eq. (1.19)]
-
         :param df_clust: cluster data - position, velocity, and mass
-        :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust_input
+        :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust
         :param df_F: force per unit of mass acting on each particle
         :type df_F: pyspark.sql.DataFrame, with schema schemas.F_id
         :returns: the new velocity of each particle
@@ -54,11 +51,8 @@ class IntergratorEuler(IntegratorBase):
 
             r_i(t) = 1/2*F_i*∆t^2 + v_i(t0)*∆t + r_i(t0)
 
-        [Aarseth, S. (2003). Gravitational N-Body Simulations: Tools and Algorithms
-        eq. (1.19)]
-
         :param df_clust: cluster data - position, velocity, and mass
-        :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust_input
+        :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust
         :param df_F: force per unit of mass acting on each particle
         :type df_F: pyspark.sql.DataFrame, with schema schemas.F_id
         :returns: the new position of each particle
@@ -80,7 +74,7 @@ class IntergratorEuler(IntegratorBase):
         """combination of setp_r and setp_v for more efficient computation
 
         :param df_clust: cluster data - position, velocity, and mass
-        :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust_input
+        :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust
         :param df_F: force per unit of mass acting on each particle
         :type df_F: pyspark.sql.DataFrame, with schema schemas.F_id
         :returns: the new velocity of each particle
@@ -113,7 +107,7 @@ class IntergratorEuler2(IntergratorEuler):
         :param insteps: number of steps to advance
         :type insteps: int
         :returns: the new positions and velocities of the particles of the cluster, and time passed
-        :rtype: tuple (pyspark.sql.DataFrame, with schema schemas.clust_input, float)
+        :rtype: tuple (pyspark.sql.DataFrame, with schema schemas.clust, float)
         """
 
         df_F1 = self.calc_F(df_clust)
@@ -148,13 +142,10 @@ class IntegratorRungeKutta4(IntegratorBase):
             k3 = f(t_n + ∆t/2, x_n + k2*∆t/2);
             k4 = f(t_n + ∆t, x_n + k3*∆t)
 
-        [Roa J. et al. (2020). Moving Planets Around
-        eq. (5.11), (5.12)]
-
         :param df_clust: cluster data
-        :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust_input
+        :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust
         :returns: the new positions and velocities of the particles of the cluster, and time passed
-        :rtype: tuple (pyspark.sql.DataFrame, with schema schemas.clust_input, float)
+        :rtype: tuple (pyspark.sql.DataFrame, with schema schemas.clust, float)
         """
 
         F1 = self.calc_F(df_clust)
@@ -184,13 +175,13 @@ class IntegratorRungeKutta4(IntegratorBase):
         """Calculate new positions & velocities from F with a modifier added to ∆t
 
         :param df_clust: cluster data
-        :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust_input
+        :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust
         :param df_F: force per unit of mass acting on each particle
         :type df_F: pyspark.sql.DataFrame, with schema schemas.F_id
         :param mod: modifier to apply to ∆t, defaults to 1
         :type mod: double, optional
         :returns: cluster data after force is applied
-        :rtype: pyspark.sql.DataFrame, with schema schemas.clust_input
+        :rtype: pyspark.sql.DataFrame, with schema schemas.clust
         """
 
         df_clust = df_F.join(df_clust, "id").selectExpr(
@@ -220,9 +211,9 @@ class IntegratorLeapfrog(IntegratorBase):
         """advance by a step
 
         :param df_clust: cluster data
-        :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust_input
+        :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust
         :returns: the new positions and velocities of the particles of the cluster, and time passed
-        :rtype: tuple (pyspark.sql.DataFrame, with schema schemas.clust_input, float)
+        :rtype: tuple (pyspark.sql.DataFrame, with schema schemas.clust, float)
         """
 
         if not self.df_F_t0:
@@ -245,7 +236,7 @@ class IntegratorLeapfrog(IntegratorBase):
         """Calculate r
 
         :param df_clust: cluster data - position, velocity, and mass
-        :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust_input
+        :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust
         :returns: the new position of each particle
         :rtype: pyspark.sql.DataFrame, with schema schemas.r_id
         """
@@ -266,7 +257,7 @@ class IntegratorLeapfrog(IntegratorBase):
             v_i(t) = 1/2(F_i(t0) + F_i(t))*∆t + v_i(t0)
 
         :param df_clust: cluster data - position, velocity, and mass
-        :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust_input
+        :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust
         :param df_F_t: force per unit of mass acting on each particle
         :type df_F_t: pyspark.sql.DataFrame, with schema schemas.F_id
         :returns: the new position of each particle

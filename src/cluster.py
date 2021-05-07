@@ -13,7 +13,7 @@ def calc_cm(df_clust):
                 i=1
 
     :param df_clust: cluster data - position, velocity, and mass
-    :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust_input
+    :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust
     :returns: center of mass
     :rtype: pyspark.sql.types.Row
     """
@@ -33,7 +33,7 @@ def calc_rh(df_clust, cm):
     """Calculate the half-mass radius of the cluster
 
     :param df_clust: cluster data - position, velocity, and mass
-    :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust_input
+    :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust
     :param cm: cluster center of mass
     :type cm: iterable ([x, y, z])
     :returns: half-mass radius
@@ -72,11 +72,8 @@ def calc_T(df_clust, G=1):
         T = 1/2*Σ m_i*v_i^2
                i=1
 
-    [Aarseth, S. (2003). Gravitational N-Body Simulations: Tools and Algorithms
-    eq. (1.2)]
-
     :param df_clust: cluster data - position, velocity, and mass
-    :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust_input
+    :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust
     :param G: gravitational constant to use, defaults to 1
     :type G: float, optional
     :returns: T
@@ -102,11 +99,8 @@ def calc_U(df_clust, G=1):
         - Σ   Σ  -----------
          i=1 j>i |r_i - r_j|
 
-    [Aarseth, S. (2003). Gravitational N-Body Simulations: Tools and Algorithms
-    eq. (1.2)]
-
     :param df_clust: cluster data - position, velocity, and mass
-    :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust_input
+    :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust
     :param G: gravitational constant to use, defaults to 1
     :type G: float, optional
     :returns: U
@@ -137,11 +131,8 @@ def calc_E(df_clust, G=1, W=0):
     """Calculate the total energy of the cluster
     in our case there is no external energy (W)
 
-    [Aarseth, S. (2003). Gravitational N-Body Simulations: Tools and Algorithms
-    eq. (1.5)]
-
     :param df_clust: cluster data - position, velocity, and mass
-    :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust_input
+    :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust
     :param G: gravitational constant to use, defaults to 1
     :type G: float, optional
     :param W: external energy, defaults to 0
@@ -160,11 +151,8 @@ def calc_J(df_clust):
         J = Σ r_i × m_i * v_i
            i=1
 
-    [Aarseth, S. (2003). Gravitational N-Body Simulations: Tools and Algorithms
-    eq. (1.3)]
-
     :param df_clust: cluster data - position, velocity, and mass
-    :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust_input
+    :type df_clust: pyspark.sql.DataFrame, with schema schemas.clust
     :returns: J, broken into components
     :rtype: {[type]}
     """
