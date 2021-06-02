@@ -17,10 +17,14 @@ class IntergratorEuler(IntegratorBase):
         :rtype: tuple (pyspark.sql.DataFrame, with schema schemas.clust, float)
         """
 
-        df_clust = df_clust.cache()
         df_F = self.calc_F(df_clust)
+        df_v, df_r = self.step_v(df_clust, df_F), self.step_r(
+            df_clust, df_F)
 
-        df_clust = self.step(df_clust, df_F)
+        df_clust = df_r.join(df_v, "id")
+        # bring order back to schema
+        df_clust = df_clust.select('id', 'x', 'y', 'z', 
+                                   'vx', 'vy', 'vz', 'm')
 
         return (df_clust, self.dt)
 
@@ -68,7 +72,6 @@ class IntergratorEuler(IntegratorBase):
         )
 
         return df_r_t
-
 
     def step(self, df_clust, df_F):
         """combination of setp_r and setp_v for more efficient computation
