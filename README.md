@@ -2,9 +2,7 @@ An N-body problem in physics aims to predict the movement of [stellar] particles
 
 This repo aims to implement some computation methods for conducting an n-body simulation with Apache Spark (pySpark more concretely). 
 
-## Data
-
-The input and validation data is several snapshots of a simulation created with Aarseth's script NBODY6. It is originally uploaded [here](https://www.kaggle.com/mariopasquato/star-cluster-simulations), where you can find more detailed information about the dataset. 
+Detailed information and an API document can be found in nbody_simulations_spark.pdf, presented as a bachelors thesis for computer science at New Bulgarian University.
 
 ## Requirements 
 * Python 3.6+
