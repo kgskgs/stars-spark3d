@@ -18,13 +18,7 @@ class IntergratorEuler(IntegratorBase):
         """
 
         df_F = self.calc_F(df_clust)
-        df_v, df_r = self.step_v(df_clust, df_F), self.step_r(
-            df_clust, df_F)
-
-        df_clust = df_r.join(df_v, "id")
-        # bring order back to schema
-        df_clust = df_clust.select('id', 'x', 'y', 'z', 
-                                   'vx', 'vy', 'vz', 'm')
+        df_clust = self.step(df_clust, df_F)
 
         return (df_clust, self.dt)
 
